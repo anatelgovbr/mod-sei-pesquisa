@@ -2,14 +2,15 @@
 
 class MdPesqPesquisaUtil {
 
-
-	public static function criarBarraEstatisticas($total,$inicio,$fim)	{
-		return "<div class=\"barra\">".self::obterTextoBarraEstatisticas($total,$inicio,$fim)."</div>";
+	public static function criarBarraEstatisticas($total,$inicio,$fim)
+	{
+		return "<div class=\"pesquisaBarraD\">".self::obterTextoBarraEstatisticas($total,$inicio,$fim)."</div>";
 	}
 
-	public static function obterTextoBarraEstatisticas($total,$inicio,$fim)	{
+	public static function obterTextoBarraEstatisticas($total,$inicio,$fim)
+	{
 		$ret = '';
-		if ($total > 0 && $total != "") {
+		if ($total > 0 && $total != ""){
 			if ($total < $fim) {
 				$ret .= $total.' resultado'.($total>1?'s':'');
 			} else {
@@ -22,11 +23,10 @@ class MdPesqPesquisaUtil {
 	//Cria a navegacao completa
 	public static function criarBarraNavegacao($totalRes, $inicio, $numResPorPag, $objPagina, $objSessao, $strLocalPesquisa,$md5Captcha = null,$strControlador = 'processo_pesquisar.php')
 	{
-
 		if ($totalRes == 0)
 			return;
 
-		$nav = "<div class=\"paginas\">";
+		$nav = "<div class=\"pesquisaPaginas\">";
 
 		$paginaAtual = $inicio / $numResPorPag + 1;
 
@@ -36,45 +36,38 @@ class MdPesqPesquisaUtil {
 		
 		$hash = (!is_null($md5Captcha)) ? "&hash=".$md5Captcha : "";
 
-		if ($inicio != null ) {
+		if ($inicio != null ){
 			$nav .= "<span class=\"pequeno\"><a href=\"javascript:pagina.ir('" . $objPagina->formatarXHTML($objSessao->assinarLink($urlSemInicio . '&num_pagina='. ($paginaAtual - 2) . "&inicio_cade=" . ($inicio - $numResPorPag) . $hash)) . "')\">Anterior</a></span>\n";
 		}
 			
-		if ($totalRes > $numResPorPag)
-		{
+		if ($totalRes > $numResPorPag){
 			$numPagParaClicar = 12;
 
-			if (ceil($totalRes / $numResPorPag) > $numPagParaClicar)
-			{
+			if (ceil($totalRes / $numResPorPag) > $numPagParaClicar){
 				$iniNav = ($paginaAtual - floor(($numPagParaClicar - 1) / 2)) - 1;
 				$fimNav = ($paginaAtual + ceil(($numPagParaClicar - 1) / 2));
 
-				if ($iniNav < 0)
-				{
+				if ($iniNav < 0){
 					$iniNav = 0;
 					$fimNav = $numPagParaClicar;
 				}
 
-				if ($fimNav > ceil($totalRes / $numResPorPag))
-				{
+				if ($fimNav > ceil($totalRes / $numResPorPag)){
 					$fimNav = ceil($totalRes / $numResPorPag);
 					$iniNav = $fimNav - $numPagParaClicar;
 				}
-			}
-			else
-			{
+			} else {
 				$iniNav = 0;
 				$fimNav = ceil($totalRes / $numResPorPag);
 			}
 
-			for ($i = $iniNav; $i < $fimNav; $i++)
-			{
+			for ($i = $iniNav; $i < $fimNav; $i++){
 				$numPagina = $i;
 				if ($inicio == 0 AND $i == 0){
 					$nav .= " <b>" . ($i + 1) . "</b> ";
-				}elseif (($i + 1) == ($inicio / $numResPorPag + 1)){
+				} elseif (($i + 1) == ($inicio / $numResPorPag + 1)){
 					$nav .= " <b>" . ($i + 1) . "</b> ";
-				}else{
+				} else {
 					//$nav .= " <a href=\"javascript:pagina.ir('" . str_replace('+','%2B',$objPagina->formatarXHTML($objSessao->assinarLink($urlSemInicio . '&num_pagina='.$numPagina."&inicio=" . ($i * $numResPorPag)))).'#Pesquisa_Siscade' . "')\">" . ($i + 1) . "</a>\n";
 					$nav .= " <a href=\"javascript:pagina.ir('" . str_replace('+','%2B',$objPagina->formatarXHTML($objSessao->assinarLink($urlSemInicio . '&num_pagina='.$numPagina."&inicio_cade=" . ($i * $numResPorPag) . $hash)))."')\">" . ($i + 1) . "</a>\n";
 					
@@ -82,7 +75,7 @@ class MdPesqPesquisaUtil {
 			}
 		}
 
-		if (($inicio / $numResPorPag) + 1 != ceil($totalRes / $numResPorPag)) {
+		if (($inicio / $numResPorPag) + 1 != ceil($totalRes / $numResPorPag)){
 			$nav .= "<span class=\"pequeno\"><a href=\"javascript:pagina.ir('" . $objPagina->formatarXHTML($objSessao->assinarLink($urlSemInicio . '&num_pagina='.$paginaAtual . "&inicio_cade=" . ($inicio + $numResPorPag) . $hash)) . "')\">Próxima</a></span>\n";
 		}
 
@@ -91,18 +84,16 @@ class MdPesqPesquisaUtil {
 		return $nav;
 	}
 	
-	public static function buscaParticipantes($strNomeParticipante){
-		
+	public static function buscaParticipantes($strNomeParticipante)
+	{
 		$objContatoDTO = new ContatoDTO();
     	$objContatoDTO->retNumIdContato();
     	
-  
     	$objContatoDTO->setStrPalavrasPesquisa($strNomeParticipante);
   
     	if ($numIdGrupoContato!=''){
       		$objContatoDTO->setNumIdGrupoContato($numIdGrupoContato);
     	}
-  
   
   	  	$objContatoDTO->setNumMaxRegistrosRetorno(50);
   
@@ -114,13 +105,10 @@ class MdPesqPesquisaUtil {
     	$ret = MdPesqPesquisaUtil::preparaIdParticipantes($arrObjContatoDTO);
     
     	return $ret;
-		
-			
-		
 	}
 	
-	public static function valiadarLink($strLink = null){
-		
+	public static function valiadarLink($strLink = null)
+	{	
 		if ($strLink == null){
 			$strLink = $_SERVER['REQUEST_URI'];
 		}
@@ -172,7 +160,7 @@ class MdPesqPesquisaUtil {
 			}
 		}
 		
-		// --- Corrige problema de não exibir a descrição do órgão na barra superior -----------------
+		// Corrige problema de nao exibir a descricao do Orgao na barra superior
 		if (isset($_GET['id_orgao_acesso_externo'])){
 			if (SessaoSEIExterna::getInstance()->getNumIdOrgaoUsuarioExterno()==null){
 				$objOrgaoDTO = new OrgaoDTO();
@@ -194,10 +182,10 @@ class MdPesqPesquisaUtil {
 				SessaoSEIExterna::getInstance()->setAtributo('DESCRICAO_ORGAO_USUARIO_EXTERNO', $objOrgaoDTO->getStrDescricao());
 			}
 		}
-		// --- Corrige problema de não exibir a descrição do órgão na barra superior -----------------
 	}
 	
-	private static function preparaIdParticipantes($arrObjContatoDTO){
+	private static function preparaIdParticipantes($arrObjContatoDTO)
+	{
 		$strIdParticipante = '';
 		if(!empty($arrObjContatoDTO) && count($arrObjContatoDTO) == 1){
 			$strIdParticipante = $strIdParticipante.'id_int:*'.$arrObjContatoDTO[0]->getNumIdContato().'* AND ';
@@ -211,22 +199,12 @@ class MdPesqPesquisaUtil {
 				if($count < count($arrObjContatoDTO)){
 					$strIdParticipante = $strIdParticipante.' OR ';
 				}
-				
 				if($count == count($arrObjContatoDTO)){
 					$strIdParticipante = $strIdParticipante.') AND ';
 				}
 			}
-			
-// 			foreach ($arrObjContatoDTO as $objContatoDTO){
-// 				$strIdParticipante = $strIdParticipante.'*'.$objContatoDTO->getNumIdContato().'*';
-// 				if(end(array_keys($arrObjContatoDTO->NumIdContato())) == $objContatoDTO->NumIdContato()){
-// 					$strIdParticipante = $strIdParticipante.' OR ';
-// 				}
-// 			}
 		}
-		
-		return $strIdParticipante;
-		
+		return $strIdParticipante;	
 	}
 
 }

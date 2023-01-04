@@ -2,23 +2,19 @@
 
 class MdPesqSolrUtilExterno
 {
-
-
     public static function formatarCaracteresEspeciais($q)
     {
-
         $arrSolrExc = array(chr(92), '/', '+', '-', '&', '|', '!', '(', ')', '{', '}', '[', ']', '^', '~', '*', '?', ':');
 
-        foreach ($arrSolrExc as $solrExc) {
+        foreach ($arrSolrExc as $solrExc){
             $q = str_replace($solrExc, chr(92) . $solrExc, $q);
         }
-
-        return $q;
+        
+		return $q;
     }
 
     public static function formatarOperadores($q, $tag = null)
     {
-
         $q = InfraString::excluirAcentos(InfraString::transformarCaixaBaixa($q));
 
         //remove aspas repetidas
@@ -28,17 +24,13 @@ class MdPesqSolrUtilExterno
 
         $arrPalavrasQ = InfraString::agruparItens($q);
 
-        //print_r($arrPalavrasQ);
-        //die;
+        for ($i = 0; $i < count($arrPalavrasQ); $i++){
 
-        for ($i = 0; $i < count($arrPalavrasQ); $i++) {
-
-            //número de aspas ímpar, remover do token que ficar com apenas uma
+            //numero de aspas impar, remover do token que ficar com apenas uma
             $arrPalavrasQ[$i] = MdPesqSolrUtilExterno::formatarCaracteresEspeciais(str_replace('"', '', $arrPalavrasQ[$i]));
 
-            if (strpos($arrPalavrasQ[$i], ' ') !== false) {
-
-                if ($tag == null) {
+            if (strpos($arrPalavrasQ[$i], ' ') !== false){
+                if ($tag == null){
                     $arrPalavrasQ[$i] = '"' . $arrPalavrasQ[$i] . '"';
                 } else {
                     $arrPalavrasQ[$i] = $tag . ':"' . $arrPalavrasQ[$i] . '"';
@@ -58,8 +50,8 @@ class MdPesqSolrUtilExterno
 
         $ret = '';
         for ($i = 0; $i < count($arrPalavrasQ); $i++) {
-            //Adiciona operador and como padrão se não informado
-            if ($i > 0) {
+            //Adiciona operador and como padrao se nao informado
+            if ($i > 0){
                 if (!in_array($arrPalavrasQ[$i - 1], array('AND', 'OR', 'AND NOT', '(')) && !in_array($arrPalavrasQ[$i], array('AND', 'OR', 'AND NOT', ')'))) {
                     $ret .= " AND";
                 }
@@ -69,28 +61,28 @@ class MdPesqSolrUtilExterno
 
         $ret = str_replace(" AND AND NOT ", " AND NOT ", $ret);
 
-        if (substr($ret, 0, strlen(" AND NOT ")) == " AND NOT ") {
+        if (substr($ret, 0, strlen(" AND NOT ")) == " AND NOT "){
             $ret = substr($ret, strlen(" AND NOT "));
             $ret = 'NOT ' . $ret;
         }
 
-        if (substr($ret, 0, strlen(" AND ")) == " AND ") {
+        if (substr($ret, 0, strlen(" AND ")) == " AND "){
             $ret = substr($ret, strlen(" AND "));
         }
 
-        if (substr($ret, 0, strlen(" OR ")) == " OR ") {
+        if (substr($ret, 0, strlen(" OR ")) == " OR "){
             $ret = substr($ret, strlen(" OR "));
         }
 
-        if (substr($ret, strlen(" AND") * -1) == " AND") {
+        if (substr($ret, strlen(" AND") * -1) == " AND"){
             $ret = substr($ret, 0, strlen(" AND") * -1);
         }
 
-        if (substr($ret, strlen(" OR") * -1) == " OR") {
+        if (substr($ret, strlen(" OR") * -1) == " OR"){
             $ret = substr($ret, 0, strlen(" OR") * -1);
         }
 
-        if (substr($ret, strlen(" AND NOT") * -1) == " AND NOT") {
+        if (substr($ret, strlen(" AND NOT") * -1) == " AND NOT"){
             $ret = substr($ret, 0, strlen(" AND NOT") * -1);
         }
 
@@ -103,13 +95,13 @@ class MdPesqSolrUtilExterno
 
     public static function criarBarraEstatisticas($total, $inicio, $fim)
     {
-        return "<div class=\"barra\">" . self::obterTextoBarraEstatisticas($total, $inicio, $fim) . "</div>";
+        return "<div class=\"pesquisaBarraD\">" . self::obterTextoBarraEstatisticas($total, $inicio, $fim) . "</div>";
     }
 
     public static function obterTextoBarraEstatisticas($total, $inicio, $fim)
     {
         $ret = '';
-        if ($total > 0 && $total != "") {
+        if ($total > 0 && $total != ""){
             if ($total < $fim) {
                 $ret .= $total . ' resultado' . ($total > 1 ? 's' : '');
             } else {
@@ -122,11 +114,10 @@ class MdPesqSolrUtilExterno
     //Cria a navegacao completa
     public static function criarBarraNavegacao($totalRes, $inicio, $numResPorPag, $objPagina, $objSessao, $md5Captcha = null, $strControlador = 'md_pesq_processo_pesquisar.php')
     {
-
         if ($totalRes == 0)
             return;
 
-        $nav = "<div class=\"paginas\">";
+        $nav = "<div class=\"pesquisaPaginas d-flex flex-column flex-md-row text-align-center\">";
 
         $paginaAtual = $inicio / $numResPorPag + 1;
 
@@ -134,11 +125,16 @@ class MdPesqSolrUtilExterno
 
         $hash = (!is_null($md5Captcha)) ? "&hash=" . $md5Captcha : "";
 
+        $nav .= '<div class="col-12 col-md-4 mx-0 px-0 text-center text-md-right">';
         if ($inicio != null) {
             $nav .= "<span class=\"pequeno\"><a href=\"javascript:pagina.ir('" . $objPagina->formatarXHTML($objSessao->assinarLink($urlSemInicio . "&inicio=" . ($inicio - $numResPorPag) . $hash)) . "')\">Anterior</a></span>\n";
         }
+        $nav .= '</div>'."\n";
 
         if ($totalRes > $numResPorPag) {
+
+            $nav .= '<div class="col-12 col-md-4 mx-0 px-0 text-center">'."\n";
+
             $numPagParaClicar = 12;
 
             if (ceil($totalRes / $numResPorPag) > $numPagParaClicar) {
@@ -161,18 +157,21 @@ class MdPesqSolrUtilExterno
 
             for ($i = $iniNav; $i < $fimNav; $i++) {
                 if ($inicio == 0 and $i == 0) {
-                    $nav .= " <b>" . ($i + 1) . "</b> ";
+                    $nav .= " <div class=\"pesquisaPaginaSelecionada\">" . ($i + 1) . "</div> ";
                 } elseif (($i + 1) == ($inicio / $numResPorPag + 1)) {
-                    $nav .= " <b>" . ($i + 1) . "</b> ";
+                    $nav .= " <div class=\"pesquisaPaginaSelecionada\">" . ($i + 1) . "</div> ";
                 } else {
                     $nav .= " <a href=\"javascript:pagina.ir('" . str_replace('+', '%2B', $objPagina->formatarXHTML($objSessao->assinarLink($urlSemInicio . "&inicio=" . ($i * $numResPorPag)))) . $hash . "')\">" . ($i + 1) . "</a>\n";
                 }
             }
+            $nav .= '</div>'."\n";
         }
 
+        $nav .= '<div class="col-12 col-md-4 mx-0 px-0 text-center text-md-left">';
         if (($inicio / $numResPorPag) + 1 != ceil($totalRes / $numResPorPag)) {
             $nav .= "<span class=\"pequeno\"><a href=\"javascript:pagina.ir('" . $objPagina->formatarXHTML($objSessao->assinarLink($urlSemInicio . "&inicio=" . ($inicio + $numResPorPag))) . $hash . "')\">Próxima</a></span>\n";
         }
+        $nav .= '</div>'."\n";
 
         $nav .= "</div>";
 

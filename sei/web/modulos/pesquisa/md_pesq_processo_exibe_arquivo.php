@@ -1,13 +1,10 @@
 <?
 /**
  * CONSELHO ADMINISTRATIVO DE DEFESA ECONÔMICA
-*
-* 02/10/2014 - criado por alex braga
-*
-* Versão do Gerador de Código:
-*
-* Versão no CVS:
-*/
+ *
+ *
+**/
+
 try {
    require_once dirname(__FILE__).'/../../SEI.php';
 
@@ -16,27 +13,16 @@ try {
    MdPesqConverteURI::converterURI();
    MdPesqPesquisaUtil::valiadarLink();
   
-  //session_start(); 
-  
-  //////////////////////////////////////////////////////////////////////////////
-  InfraDebug::getInstance()->setBolLigado(false);
-  InfraDebug::getInstance()->setBolDebugInfra(false);
-  InfraDebug::getInstance()->limpar();
-  //////////////////////////////////////////////////////////////////////////////
-
-  // if (isset($_GET['id_acesso_externo'])){
-  //  SessaoSEIExterna::getInstance($_GET['id_acesso_externo'])->validarLink();
-  // }else{
-  //    SessaoSEIExterna::getInstance()->validarLink();
-  // }
+//	InfraDebug::getInstance()->setBolLigado(false);
+//	InfraDebug::getInstance()->setBolDebugInfra(false);
+//	InfraDebug::getInstance()->limpar();
   
   switch($_GET['acao_externa']){ 
   	  	
     case 'usuario_externo_exibir_arquivo':     
       
       AuditoriaSEI::getInstance()->auditar('usuario_externo_exibir_arquivo', __FILE__);
-/*    
- * SEI 2.5.1  */
+	  
       $infraParametroDTO = new InfraParametroDTO();
       $infraParametroDTO->setStrNome('SEI_VERSAO');
       $infraParametroDTO->retStrValor();
@@ -45,7 +31,6 @@ try {
       $infraParametroDTO = $infraParametroRN->consultar($infraParametroDTO);	
       $versaoSei = $infraParametroDTO->getStrValor();
       print_r($versaoSei);
-     
       
       if($versaoSei == '2.5.1'){
       	
@@ -64,8 +49,6 @@ try {
       	break;
       	
       }else{
-      	/*
-      	 * SEI 2.5.2 */
       	header("Pragma: public");
       	header('Pragma: no-cache');
       	header("Expires: 0");
@@ -87,11 +70,7 @@ try {
       	 
       	break;
       	
-      }    
-     
-
-
-
+      }
      
     default:
       throw new InfraException("Ação '".$_GET['acao']."' não reconhecida.");
