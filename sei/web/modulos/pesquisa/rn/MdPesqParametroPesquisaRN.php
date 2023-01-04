@@ -14,14 +14,14 @@ class MdPesqParametroPesquisaRN extends InfraRN {
   public static $TA_CAPTCHA_PDF = 'CAPTCHA_PDF';
   public static $TA_CHAVE_CRIPTOGRAFIA = 'CHAVE_CRIPTOGRAFIA';
   public static $TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO = 'DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO';
-  public static $TA_DOCUMENTO_PROCESSO_PUBLICO = 'DOCUMENTO_PROCESSO_PUBLICO';
+  public static $TA_PESQUISA_DOCUMENTO_PROCESSO_RESTRITO = 'PESQUISA_DOCUMENTO_PROCESSO_RESTRITO';
   public static $TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO = 'LISTA_ANDAMENTO_PROCESSO_PUBLICO';
   public static $TA_LISTA_ANDAMENTO_PROCESSO_RESTRITO = 'LISTA_ANDAMENTO_PROCESSO_RESTRITO';
   public static $TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO = 'LISTA_DOCUMENTO_PROCESSO_PUBLICO';
   public static $TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO = 'LISTA_DOCUMENTO_PROCESSO_RESTRITO';
   public static $TA_MENU_USUARIO_EXTERNO = 'MENU_USUARIO_EXTERNO';
   public static $TA_METADADOS_PROCESSO_RESTRITO = 'METADADOS_PROCESSO_RESTRITO';
-  public static $TA_PROCESSO_RESTRITO = 'PROCESSO_RESTRITO';
+  public static $TA_DATA_CORTE = 'DATA_CORTE';
 
   public function __construct()
   {
@@ -201,6 +201,26 @@ class MdPesqParametroPesquisaRN extends InfraRN {
       throw new InfraException('Erro cadastrando Parâmetro da Pesquisa.',$e);
     }
   }
+
+    protected function existeDataCortePesquisaConectado(){
+
+        $objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
+        $objParametroPesquisaDTO->setStrNome('DATA_CORTE');
+        $objParametroPesquisaDTO->retStrValor();
+        $objParametroPesquisaDTO = (new MdPesqParametroPesquisaBD($this->getObjInfraIBanco()))->consultar($objParametroPesquisaDTO);
+
+        if($objParametroPesquisaDTO && !empty($objParametroPesquisaDTO->getStrValor())) {
+            $data = explode('-', $objParametroPesquisaDTO->getStrValor());
+            if(checkdate($data[1], $data[2], $data[0])){
+                if($objParametroPesquisaDTO->getStrValor() <= date('Y-m-d')){
+                    return $objParametroPesquisaDTO->getStrValor();
+                }
+            }
+        }
+
+        return false;
+
+    }
 
 }
 ?>

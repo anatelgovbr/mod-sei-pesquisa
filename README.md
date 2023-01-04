@@ -1,11 +1,13 @@
-# Módulo de Pesquisa Pública
+# Módulo SEI Pesquisa Pública
+- Este módulo foi desenvolvido originalmente pelo CADE (Conselho Administrativo de Defesa Econômica).
+- Desde da v4.0.0 do módulo, que o adaptou para o SEI 4.0, a Anatel vem mantendo e evoluindo o SEI Pesquisa Pública.
 
 ## Requisitos
-- SEI 4.0.6 instalado/atualizado (Não é compatível com o SEI 3.1.x)
+- SEI 4.0.9 instalado/atualizado (Não é compatível com o SEI 3.1.x)
 	- Verificar valor da constante de versão no arquivo /sei/web/SEI.php ou, após logado no sistema, parando o mouse sobre a logo do SEI no canto superior esquerdo.
-- Instalar nas máquinas que rodam o SEI a biblioteca "php-mcrypt".
+- **Atenção**: nas máquinas que rodam o SEI deve instalar a biblioteca PHP "php-mcrypt".
 - Antes de executar os scripts de instalação/atualização, o usuário de acesso aos bancos de dados do SEI e do SIP, constante nos arquivos ConfiguracaoSEI.php e ConfiguracaoSip.php, deverá ter permissão de acesso total ao banco de dados, permitindo, por exemplo, criação e exclusão de tabelas.
-- Os códigos-fonte do Módulo podem ser baixados a partir do link a seguir, devendo sempre utilizar a versão mais recente: [https://github.com/cadegovbr/mod-sei-pesquisa-SEI/releases](https://github.com/cadegovbr/mod-sei-pesquisa-SEI/releases "Clique e acesse")
+- Os códigos-fonte do Módulo podem ser baixados a partir do link a seguir, devendo sempre utilizar a versão mais recente: [https://github.com/anatelgovbr/mod-sei-pesquisa/releases](https://github.com/anatelgovbr/mod-sei-pesquisa/releases "Clique e acesse")
 
 ## Procedimentos para Instalação
 1. Fazer backup dos bancos de dados do SEI e do SIP.
@@ -32,7 +34,7 @@
 7. **IMPORTANTE**: Na execução dos dois scripts de banco acima, ao final deve constar o termo "FIM", o "TEMPO TOTAL DE EXECUÇÃO" e a informação de que a instalação/atualização foi realizada com sucesso na base de dados correspondente (SEM ERROS). Do contrário, o script não foi executado até o final e algum dado não foi inserido/atualizado no respectivo banco de dados, devendo recuperar o backup do banco e repetir o procedimento.
 	- Constando ao final da execução do script as informações indicadas, pode logar no SEI e SIP e verificar no menu **Infra > Parâmetros** dos dois sistemas se consta o parâmetro "VERSAO_MODULO_PESQUISA_PUBLICA" com o valor da última versão do módulo.
 8. Em caso de erro durante a execução do script, verificar (lendo as mensagens de erro e no menu Infra > Log do SEI e do SIP) se a causa é algum problema na infraestrutura local ou ajustes indevidos na estrutura de banco do core do sistema. Neste caso, após a correção, deve recuperar o backup do banco pertinente e repetir o procedimento, especialmente a execução dos scripts de banco indicados acima.
-	- Caso não seja possível identificar a causa, entrar em contato com: <a href="mailto:sei@cade.gov.br">sei@cade.gov.br</a>
+	- Caso não seja possível identificar a causa, entrar em contato com: <a href="mailto:sei@anatel.gov.br">sei@anatel.gov.br</a>
 9. Após a execução com sucesso, com um usuário com permissão de Administrador no SEI, seguir os passos dispostos no tópico "Orientações Negociais" mais abaixo.
 
 ## Orientações Negociais
@@ -41,6 +43,9 @@
 		http://[Servidor_PHP]/sei/modulos/pesquisa/md_pesq_processo_pesquisar.php?acao_externa=protocolo_pesquisar&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo=0
 
 2. **Atenção:** Cuidado com o preenchimento do campo "Chave para criptografia dos links de processos e documentos" na Administração do módulo. Leia o texto no ícone de ajuda sobre o citado campo.
-3. A partir da versão 3.0.6 do Módulo de Pesquisa Pública existe integração com o Módulo de Peticionamento e Intimação Eletrônicos, em que a Pesquisa Pública percebe se existe o mencionado módulo na versão 2.0.0 ou superior instalado no SEI e, com isso, tem comportamento próprio na tela de acesso ao processo pela Pesquisa Pública para **proteger o acesso a documento público que esteja relacionado com Intimação Eletrônica ainda não cumprida**.
-	- Este comportamento visa a proteger o conhecimento do teor do documento por meios diversos do Cumprimento da Intimação Eletrônica.
-	- Após o Cumprimento da Intimação Eletrônica pelos destinatários, por ser documento Público, o acesso a seu teor por meio da Pesquisa Pública será liberado.
+3. A partir da versão 3.0.6 do módulo de Pesquisa Pública existe integração com o Módulo de Peticionamento e Intimação Eletrônicos, em que a Pesquisa Pública percebe se existe o mencionado módulo na versão 2.0.0 ou superior instalado no SEI e, com isso, tem comportamento próprio na tela de acesso ao processo pela Pesquisa Pública para **proteger o acesso a documento público que esteja relacionado com Intimação Eletrônica ainda não cumprida**.
+	- Este comportamento visa a proteção da pesquisa dentro do conteúdo e o acesso do teor do documento público relacionado com intimação eletrônica ainda não cumprida, para evitar o conhecimento prévio do teor de documento objeto de intimação antes do devido Cumprimento da Intimação Eletrônica.
+	- Após o Cumprimento da Intimação Eletrônica pelos destinatários, por ser documento Público, o acesso a seu teor por meio da Pesquisa Pública será liberado normalmente.
+4. A partir da versão 4.1.0 do módulo de Pesquisa Pública foi criado o parâmetro "Data de Corte Opcional" na Administração do módulo. Leia o texto no ícone de ajuda sobre o citado campo.
+	- Caso seja inserida uma Data de Corte, o módulo protege a pesquisa dentro do conteúdo e o acesso aos documentos com nível de acesso Público que tenham data de inclusão (no caso de Documento Externo ou Automático) ou data da primeira assinatura (no caso de Documento Gerado ou Formulário) anterior à data de corte informada.
+	- Nesse cenário, no acesso ao processo, ao lado do protocolo do documento constará o ícone de uma chave azul indicando a situação de restrição provisória em razão de necessidade de reclassificação de nível de acesso.
