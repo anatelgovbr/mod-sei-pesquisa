@@ -5,10 +5,10 @@ class MdPesqAtualizadorSipRN extends InfraRN
 {
 
     private $numSeg = 0;
-    private $versaoAtualDesteModulo = '4.0.1';
+    private $versaoAtualDesteModulo = '4.1.0';
     private $nomeDesteModulo = 'MÓDULO DE PESQUISA PÚBLICA';
     private $nomeParametroModulo = 'VERSAO_MODULO_PESQUISA_PUBLICA';
-    private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1');
+    private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1', '4.1.0');
 
     public function __construct()
     {
@@ -80,7 +80,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
             }
 
             //testando versao do framework
-            $numVersaoInfraRequerida = '1.600.0';
+            $numVersaoInfraRequerida = '1.612.3';
             $versaoInfraFormatada = (int)str_replace('.', '', VERSAO_INFRA);
             $versaoInfraReqFormatada = (int)str_replace('.', '', $numVersaoInfraRequerida);
 
@@ -108,6 +108,8 @@ class MdPesqAtualizadorSipRN extends InfraRN
                     $this->instalarv400();
                 case '4.0.0':
                     $this->instalarv401();
+                case '4.0.1':
+                    $this->instalarv410();
                     break;
 
                 default:
@@ -129,7 +131,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
     protected function instalarv300()
     {
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO ' . $this->versaoAtualDesteModulo . ' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 3.0.0 DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
         $strRotuloItemMenuPesquisaPublica = 'Pesquisa Pública';
         $strRotuloItemMenuParametrosPesquisaPublica = 'Parâmetros de Pesquisa';
 
@@ -235,19 +237,19 @@ class MdPesqAtualizadorSipRN extends InfraRN
 		$this->logar('ADICIONANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
         BancoSip::getInstance()->executarSql('INSERT INTO infra_parametro (valor, nome) VALUES( \'3.0.0\',  \'' . $this->nomeParametroModulo . '\' )');
 
-        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO ' . $this->versaoAtualDesteModulo . ' DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
+        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 3.0.0 DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
 
     }
 
     protected function instalarv400()
     {
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO ' . $this->versaoAtualDesteModulo . ' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.0.0 DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
 
         $this->logar('ATUALIZANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
         BancoSip::getInstance()->executarSql('UPDATE infra_parametro SET valor = \'4.0.0\' WHERE nome = \'' . $this->nomeParametroModulo . '\' ');
 
-        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO ' . $this->versaoAtualDesteModulo . ' DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
+        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.0.0 DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
     }
 
 
@@ -259,9 +261,19 @@ class MdPesqAtualizadorSipRN extends InfraRN
         $this->logar('ATUALIZANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
         BancoSip::getInstance()->executarSql('UPDATE infra_parametro SET valor = \'4.0.1\' WHERE nome = \'' . $this->nomeParametroModulo . '\' ');
 
-        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO ' . $this->versaoAtualDesteModulo . ' DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
+        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.0.1 DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
     }
 
+    protected function instalarv410()
+    {
+
+        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.1.0 DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+
+        $this->logar('ATUALIZANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
+        BancoSip::getInstance()->executarSql('UPDATE infra_parametro SET valor = \'4.1.0\' WHERE nome = \'' . $this->nomeParametroModulo . '\' ');
+
+        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.1.0 DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
+    }
 
     private function adicionarRecursoPerfil($numIdSistema, $numIdPerfil, $strNome, $strCaminho = null)
     {
