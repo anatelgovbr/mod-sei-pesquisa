@@ -1,65 +1,55 @@
 <?
 /**
  * CONSELHO ADMINISTRATIVO DE DEFESA ECONÔMICA
-*
-* 29/09/2014 - criado por alex braga
-*
-* Versão do Gerador de Código:
-*
-* Versão no CVS:
-*/
+ * 29/09/2014
+ *
+ *
+ */
 
 try {
-  require_once dirname(__FILE__).'/../../SEI.php';
+	require_once dirname(__FILE__).'/../../SEI.php';
 
-  SessaoSEIExterna::getInstance()->validarSessao();
-  //session_start();
+	SessaoSEIExterna::getInstance()->validarSessao();
  
-  //////////////////////////////////////////////////////////////////////////////
-//   InfraDebug::getInstance()->setBolLigado(false);
-//   InfraDebug::getInstance()->setBolDebugInfra(true);
-//   InfraDebug::getInstance()->limpar();
-  //////////////////////////////////////////////////////////////////////////////
+//	InfraDebug::getInstance()->setBolLigado(false);
+//	InfraDebug::getInstance()->setBolDebugInfra(true);
+//	InfraDebug::getInstance()->limpar();
+
   	MdPesqConverteURI::converterURI();
    	MdPesqPesquisaUtil::valiadarLink();
-  	
-  //  SessaoSEIExterna::getInstance()->validarLink();
-    
 
-  //carrega configurações pesquisa
-  
-  $objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
-  $objParametroPesquisaDTO->retStrNome();
-  $objParametroPesquisaDTO->retStrValor();
-   	
-  $objParametroPesquisaRN = new MdPesqParametroPesquisaRN();
-  $arrObjParametroPesquisaDTO = $objParametroPesquisaRN->listar($objParametroPesquisaDTO);
-  $arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO($arrObjParametroPesquisaDTO,'Valor','Nome');
-   
-  $bolPesquisaProcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_PROCESSO_RESTRITO] == 'S' ? true : false;
-  $bolListaDocumentoProcessoPublico = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO] == 'S' ? true : false;
-  $bolListaAndamentoProcessoPublico = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO] == 'S' ? true : false;
-  $bolCaptchaGerarPdf = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA_PDF] == 'S' ? true : false;
-  $bolLinkMetadadosProcessoRestrito =  $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO] == 'S' ? true : false;
-  $bolListaAndamentoProcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
-  $bolListaDocumentoProcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
-  $txtDescricaoProcessoAcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO];
-  
-  if($bolCaptchaGerarPdf) {
-  	$strCodigoParaGeracaoCaptcha = InfraCaptcha::obterCodigo();
-  	$md5Captcha = md5(InfraCaptcha::gerar($strCodigoParaGeracaoCaptcha));
-  }else {
-  	$md5Captcha = null;
-  }
+	//carrega configuracoes pesquisa
+	$objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
+	$objParametroPesquisaDTO->retStrNome();
+	$objParametroPesquisaDTO->retStrValor();
 
-  PaginaSEIExterna::getInstance()->setTipoPagina(PaginaSEIExterna::$TIPO_PAGINA_SEM_MENU);
+	$objParametroPesquisaRN = new MdPesqParametroPesquisaRN();
+	$arrObjParametroPesquisaDTO = $objParametroPesquisaRN->listar($objParametroPesquisaDTO);
+	$arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO($arrObjParametroPesquisaDTO,'Valor','Nome');
+
+	$bolPesquisaProcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_PROCESSO_RESTRITO] == 'S' ? true : false;
+	$bolListaDocumentoProcessoPublico = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO] == 'S' ? true : false;
+	$bolListaAndamentoProcessoPublico = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO] == 'S' ? true : false;
+	$bolCaptchaGerarPdf = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA_PDF] == 'S' ? true : false;
+	$bolLinkMetadadosProcessoRestrito =  $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO] == 'S' ? true : false;
+	$bolListaAndamentoProcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
+	$bolListaDocumentoProcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
+	$txtDescricaoProcessoAcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO];
+
+	if($bolCaptchaGerarPdf) {
+		$strCodigoParaGeracaoCaptcha = InfraCaptcha::obterCodigo();
+		$md5Captcha = md5(InfraCaptcha::gerar($strCodigoParaGeracaoCaptcha));
+	}else {
+		$md5Captcha = null;
+	}
+
+	PaginaSEIExterna::getInstance()->setTipoPagina(PaginaSEIExterna::$TIPO_PAGINA_SEM_MENU);
   
-     $strTitulo = 'Pesquisa Processual';
- 
+	$strTitulo = 'Pesquisa Processual';
 
     $dblIdProcedimento = $_GET['id_procedimento']; 
      
-	//Carregar dados do cabeçalho
+	//Carregar dados do cabecalho
 	$objProcedimentoDTO = new ProcedimentoDTO();
 	$objProcedimentoDTO->retStrNomeTipoProcedimento();
 	$objProcedimentoDTO->retStrProtocoloProcedimentoFormatado();
@@ -95,11 +85,6 @@ try {
 			die('Processo não encontrado.');
 		}
 	}
-	 
-	
-	
-	
-	
 	
 	//Carregar interessados no processo
 	$objInteressadosParticipanteDTO = new ParticipanteDTO();
@@ -107,7 +92,6 @@ try {
 	$objInteressadosParticipanteDTO->setDblIdProtocolo($dblIdProcedimento);
 	$objInteressadosParticipanteDTO->setStrStaParticipacao(ParticipanteRN::$TP_INTERESSADO);
 	
-
 	$objInteressadosParticipanteRN = new ParticipanteRN();
 	
 	$objInteressadosParticipanteDTO = $objInteressadosParticipanteRN->listarRN0189($objInteressadosParticipanteDTO);
@@ -120,7 +104,6 @@ try {
   			$strInteressados .= $objInteressadoParticipanteDTO->getStrNomeContato()."<br /> ";
   		}
 	}
-	
 	
 	//Mensagem Processo Restrito
 	$strMensagemProcessoRestrito = '';
@@ -138,7 +121,7 @@ try {
     	if($objHipoteseLegalDTO != null){
     		
     		$strHipoteseLegal .= '<img src="/infra_css/imagens/espaco.gif">';
-    		$strHipoteseLegal .= '<img src="imagens/sei_chave_restrito.gif" align="absbottom"  title="Acesso Restrito.&#13'.PaginaSEIExterna::getInstance()->formatarXHTML($objHipoteseLegalDTO->getStrNome().' ('.$objHipoteseLegalDTO->getStrBaseLegal().')').'">';
+    		$strHipoteseLegal .= '<img src="imagens/sei_chave_restrito.svg" style="vertical-align: middle;" title="Acesso Restrito. &#13'.PaginaSEIExterna::getInstance()->formatarXHTML($objHipoteseLegalDTO->getStrNome().' ('.$objHipoteseLegalDTO->getStrBaseLegal().')').'">';
    
     	}		
 		
@@ -146,19 +129,14 @@ try {
 		
 	}
 	
- 	
-  $strResultadoCabecalho = '';
-  $strResultadoCabecalho .= '<table id="tblCabecalho" width="99.3%" class="infraTable" summary="Cabeçalho de Processo" >'."\n";
-  $strResultadoCabecalho .= '<tr><th class="infraTh" colspan="2">Autuação</th></tr>'."\n";
-  $strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Processo:</td><td>'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().$strHipoteseLegal.'</td></tr>'."\n";
-  $strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Tipo:</td><td>'.PaginaSEIExterna::getInstance()->formatarXHTML($objProcedimentoDTO->getStrNomeTipoProcedimento()).'</td></tr>'."\n";
-  $strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Data de Registro:</td><td>'.$objProcedimentoDTO->getDtaGeracaoProtocolo().'</td></tr>'."\n";
-  $strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Interessados:</td><td> '.$strInteressados.'</td></tr>'."\n";
-  $strResultadoCabecalho .= '</table>'."\n";
-  
-  
-  
-  
+	$strResultadoCabecalho = '';
+	$strResultadoCabecalho .= '<table id="tblCabecalho" width="99.3%" class="infraTable" summary="Cabeçalho de Processo" >'."\n";
+	$strResultadoCabecalho .= '<tr><th class="infraTh" colspan="2">Autuação</th></tr>'."\n";
+	$strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Processo:</td><td>'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().$strHipoteseLegal.'</td></tr>'."\n";
+	$strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Tipo:</td><td>'.PaginaSEIExterna::getInstance()->formatarXHTML($objProcedimentoDTO->getStrNomeTipoProcedimento()).'</td></tr>'."\n";
+	$strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Data de Registro:</td><td>'.$objProcedimentoDTO->getDtaGeracaoProtocolo().'</td></tr>'."\n";
+	$strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Interessados:</td><td> '.$strInteressados.'</td></tr>'."\n";
+	$strResultadoCabecalho .= '</table>'."\n";
  	
 
 	//$arrObjDocumentoDTO = InfraArray::indexarArrInfraDTO($objProcedimentoDTO->getArrObjDocumentoDTO(),'IdDocumento');
@@ -170,7 +148,7 @@ try {
   		$arrObjRelProtocoloProtocoloDTO = $objProcedimentoDTO->getArrObjRelProtocoloProtocoloDTO();
   }
   
-  // Objeto Fake para paginação.
+  //Objeto Fake para paginacao
   $objProtocoloPesquisaPublicaPaginacaoDTO = new MdPesqProtocoloPesquisaPublicaDTO();
   $objProtocoloPesquisaPublicaPaginacaoDTO->retTodos(true);
   PaginaSEIExterna::getInstance()->prepararOrdenacao($objProtocoloPesquisaPublicaPaginacaoDTO, 'Registro', InfraDTO::$TIPO_ORDENACAO_ASC);
@@ -256,12 +234,8 @@ try {
    	  					$objProtocoloPesquisaPublicaDTO->setDtaRegistro($objDocumentoDTO->getDtaGeracaoProtocolo());
    	  					$objProtocoloPesquisaPublicaDTO->setDtaDocumento($objDocumentoDTO->getDtaGeracaoProtocolo());
    	  				}
-   	  				
-   	  				
-   	  			
-   	  					
+
    	  		}
-   	  		
    	  		
    	  		$objProtocoloPesquisaPublicaDTO->setStrUnidade($objDocumentoDTO->getStrSiglaUnidadeGeradoraProtocolo());
    	  		$objProtocoloPesquisaPublicaDTO->setStrStaAssociacao($objRelProtocoloProtocoloDTO->getStrStaAssociacao());
@@ -291,10 +265,7 @@ try {
     }
   }
   
-  
   if ($numProtocolos > 0){
-  	
-  	
   	
    	$strResultado = '<table id="tblDocumentos" width="99.3%" class="infraTable" summary="Lista de Documentos" >
   					  									<caption class="infraCaption" >'.PaginaSEIExterna::getInstance()->gerarCaptionTabela("Protocolos",$numProtocolos).'</caption> 
@@ -308,7 +279,7 @@ try {
   					  										
   					  									</tr>';
    	
-   	// monta tabela documentos
+   	//Monta tabela documentos
    	foreach ($arrObjProtocoloPesquisaPublicaDTO as $objProtocoloPesquisaPublicaDTO){
    		 
    		if($objProtocoloPesquisaPublicaDTO->getStrStaAssociacao() == RelProtocoloProtocoloRN::$TA_DOCUMENTO_ASSOCIADO){
@@ -320,7 +291,7 @@ try {
 			//Protege acesso à documento público de intimação eletrônica
 			$bolValidaIntimacaoEletronica = true;
 
-			$objInfraParametroDTO = $objParametroPesquisaRN->consultarVersaoPeticionamento('2.0.0');
+			$objInfraParametroDTO = $objParametroPesquisaRN->consultarVersaoPeticionamento('4.0.2');
 			if( !is_null($objInfraParametroDTO) ){
 				$objMdPetIntCertidaoRN =  new MdPetIntCertidaoRN();
 				if( !$objMdPetIntCertidaoRN->verificaDocumentoEAnexoIntimacaoNaoCumprida( array($objDocumentoDTO->getDblIdDocumento(),false,false,true) ) ){
@@ -330,7 +301,7 @@ try {
 
 			$strResultado .= '<tr class="infraTrClara">';
 
-   			//Cria checkbox para gerar PDF, verifica se o Processo é público e o Acesso Local do Protocolo é Público
+   			//Cria checkbox para gerar PDF, verifica se o Processo e publico e o Acesso Local do Protocolo e Publico
 			if($objDocumentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO && $objProcedimentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO){
 				if($objDocumentoRN->verificarSelecaoGeracaoPdf($objDocumentoDTO) && $bolValidaIntimacaoEletronica){
 					$strResultado .= '<td align="center">'.PaginaSEIExterna::getInstance()->getTrCheck($numDocumentosPdf++, $objDocumentoDTO->getDblIdDocumento(), $objDocumentoDTO->getStrNomeSerie()).'</td>';
@@ -341,8 +312,7 @@ try {
    				$strResultado .= '<td>&nbsp;</td>';
    			}
    			
-   	
-   			//Exibe link de documentos com nivel de acesso local Público de processo público
+   			//Exibe link de documentos com nivel de acesso local Publico de processo publico
 			if($objDocumentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO && $objProcedimentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO ){
 
 				if($bolValidaIntimacaoEletronica){
@@ -350,7 +320,7 @@ try {
 				}else{
 					$strResultado .= '<td align="center"><span class="retiraAncoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</span>';
 					$strResultado .= '<img src="/infra_css/imagens/espaco.gif">';
-					$strResultado .= '<img src="../peticionamento/imagens/png/intimacao_nao_cumprida_doc_anexo.png" style="width: 20px; margin-bottom: -3px;" align="absbottom"  title="Acesso Restrito.&#13'.'Documento com acesso restrito provisoriamente em razão de Intimação Eletrônica ainda não cumprida">';
+					$strResultado .= '<img src="../peticionamento/imagens/svg/intimacao_nao_cumprida_doc_anexo.svg" style="vertical-align: middle; width: 20px; margin-bottom: -3px;" title="Acesso Restrito. &#13'.'Documento com acesso restrito provisoriamente em razão de Intimação Eletrônica ainda não cumprida">';
 				}
 
 			}else{
@@ -381,19 +351,15 @@ try {
    							$strHipoteseLegalDocumento .= $objHipoteseLegaDocumentoDTO->getStrNome().' ('.$objHipoteseLegaDocumentoDTO->getStrBaseLegal().')';
    						}
    					}
-   					
-
-   					
+   					   					
    					$strResultado .= '<td align="center" ><span class="retiraAncoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</span>';
    					$strResultado .= '<img src="/infra_css/imagens/espaco.gif">';
-   					$strResultado .= '<img src="imagens/sei_chave_restrito.gif" align="absbottom"  title="Acesso Restrito.&#13'.PaginaSEIExterna::getInstance()->formatarXHTML($strHipoteseLegalDocumento).'">';
+   					$strResultado .= '<img src="imagens/sei_chave_restrito.svg" style="vertical-align: middle;" title="Acesso Restrito. &#13'.PaginaSEIExterna::getInstance()->formatarXHTML($strHipoteseLegalDocumento).'">';
    					$strResultado .= '</td>';
    					
    				}else{
    					$strResultado .= '<td align="center" style="padding-right:22px" ><span class="retiraAncoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</span>';
    				}
-   				
-   				
    			}
    			
    			$strResultado .= '<td align="center">'.PaginaSEIExterna::getInstance()->formatarXHTML($objDocumentoDTO->getStrNomeSerie().' '.$objDocumentoDTO->getStrNumero()).'</td>
@@ -414,7 +380,7 @@ try {
    			
    			$objProcedimentoDTOAnexado = $objProtocoloPesquisaPublicaDTO->getObjProcedimentoDTO();
    			
-   			// cria indicação de acesso restrito com hipotese legal.
+   			//Cria indicacao de acesso restrito com hipotese legal
    			if($objProcedimentoDTOAnexado->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_RESTRITO){
    					
    				$strHipoteseLegalAnexo = '';
@@ -441,7 +407,7 @@ try {
    						$strHipoteseLegalAnexo .= $objHipoteseLegaDocumentoDTO->getStrNome().' ('.$objHipoteseLegaDocumentoDTO->getStrBaseLegal().')';
    					}
    				}
-   				$strProtocoloRestrito .= '<img src="imagens/sei_chave_restrito.gif" align="absbottom"  title="Acesso Restrito.&#13'.$strHipoteseLegalAnexo.'">';
+   				$strProtocoloRestrito .= '<img src="imagens/sei_chave_restrito.svg" style="vertical-align: middle;" title="Acesso Restrito. &#13'.$strHipoteseLegalAnexo.'">';
    			}
    			
    			if($objProcedimentoDTOAnexado->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO && $objProcedimentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO ){
@@ -451,7 +417,6 @@ try {
    				// $strLinkProcessoAnexado = PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('processo_acesso_externo_consulta.php?id_acesso_externo='.$_GET['id_acesso_externo'].'&id_acesso_externo_assinatura='.$_GET['id_acesso_externo_assinatura'].'&id_procedimento_anexado='.$objProcedimentoDTOAnexado->getDblIdProcedimento()));
    					
    				$strLinkProcessoAnexado = PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink(MdPesqSolrUtilExterno::prepararUrl($urlPesquisaProcesso)));
-   				
    				
    				$strResultado .= '<td align="center"><a href="javascript:void(0);" onclick="window.open(\''.$strLinkProcessoAnexado.'\');" alt="'.$objProcedimentoDTOAnexado->getStrNomeTipoProcedimento().'" title="'.$objProcedimentoDTOAnexado->getStrNomeTipoProcedimento().'" class="ancoraPadraoAzul">'.$objProcedimentoDTOAnexado->getStrProtocoloProcedimentoFormatado().'</a>'.$strProtocoloRestrito.'</td>';
    				
@@ -470,11 +435,9 @@ try {
    	
    		}
    	}
-   	
    	$strResultado.='</table>';
   									
 	}	
-
 
 	$arrComandos = array();
 	if ($numDocumentosPdf > 0){
@@ -488,7 +451,7 @@ try {
 		
 	}
  	
- 	//Carregar histórico
+ 	//Carregar historico
  
   $numRegistrosAtividades = 0;
 
@@ -507,9 +470,6 @@ try {
   	 
   	$numRegistrosAtividades = count($arrObjAtividadeDTO);
   }
-  	
-	
- 
 
   if ($numRegistrosAtividades > 0){
     
@@ -596,8 +556,7 @@ try {
   					}
 
 					//Protege acesso à documento público de intimação eletrônica
-					$objInfraParametroDTO = $objParametroPesquisaRN->consultarVersaoPeticionamento('2.0.0');
-					if( !is_null($objInfraParametroDTO) ){
+					if( PesquisaIntegracao::verificaSeModPeticionamentoVersaoMinima() ){
 						$objMdPetIntCertidaoRN =  new MdPetIntCertidaoRN();
 						if( !$objMdPetIntCertidaoRN->verificaDocumentoEAnexoIntimacaoNaoCumprida( array($objDocumentoDTO->getDblIdDocumento(),false,false,true) ) ){
 							$idx_documento = array_search($objDocumentoDTO->getDblIdDocumento(), $arrSelecionados);
@@ -612,7 +571,6 @@ try {
   					die ("Erro ao Gerar Pdf");
   				}
   				
-  			
 			}
 
 			if (count($arrSelecionados)==0){
@@ -670,8 +628,6 @@ table caption {
 
 <? if($bolCaptchaGerarPdf) { ?>
 
-
-
 #divInfraModal{
 	
 	display: none; 
@@ -685,7 +641,6 @@ table caption {
     overflow: auto;
    
 }
-
 
 .close {
     color: white;
@@ -718,7 +673,7 @@ table caption {
 }
 <? } ?>
 
-span.retiraAncoraPadraoAzul{font-size: 1.2em;}
+span.retiraAncoraPadraoAzul{font-size: .875rem;}
 
 <?
 PaginaSEIExterna::getInstance()->fecharStyle();
@@ -754,8 +709,6 @@ $(document).unbind("keyup").keyup(function(e){
     	}
     }
 });
-
-
 
 function gerarPdfModal(){
 
@@ -880,8 +833,6 @@ if($bolGeracaoOK){
 					    	}
 					    }
 					});
-
-
 
 					function gerarPdfModal(){
 

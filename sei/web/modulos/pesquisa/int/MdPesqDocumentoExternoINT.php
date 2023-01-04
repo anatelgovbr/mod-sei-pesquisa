@@ -2,37 +2,16 @@
 
 /**
  * CONSELHO ADMINISTRATIVO DE DEFESA ECONÔMICA
-* 2014-12-15
-* Versão do Gerador de Código: 1.0
-* Versão no CVS/SVN:
-*
-* sei
-* pesquisa
-* ProcedimentoSiscadeBD
-*
-*
-* @author Alex Alves Braga <bsi.alexbraga@gmail.com>
-*/
-
-/**
+ * 29/11/2016
+ * Versão do Gerador de Código: 1.0
  * Classe Banco de dados Procedimento siscade.
-*
-*
-* @package institucional_pesquisa_ProcedimentoSiscadeBD
-* @author Alex Alves Braga <bsi.alexbraga@gmail.com>
-* @license Creative Commons Atribuição 3.0 não adaptada
-*          <http://creativecommons.org/licenses/by/3.0/deed.pt_BR>
-* @ignore Este código é livre para uso sem nenhuma restrição,
-*         salvo pelas informações a seguir referentes
-* @copyright Conselho Administrativo de Defesa Econômica ©2014-2018
-*            <http://www.cade.gov.br>
-* @author Alex Alves Braga <bsi.alexbraga@gmail.com>
-*/
+ *
+ */
 
 class MdPesqDocumentoExternoINT extends DocumentoINT{
 	
-	public static function formatarExibicaoConteudo($strTipoVisualizacao, $strConteudo, $objInfraPagina=null, $objInfraSessao=null, $strLinkDownload=null){
-	
+	public static function formatarExibicaoConteudo($strTipoVisualizacao, $strConteudo, $objInfraPagina=null, $objInfraSessao=null, $strLinkDownload=null)
+	{
 		$strResultado = '';
 	
 		if (!InfraString::isBolVazia($strConteudo)){
@@ -113,7 +92,7 @@ class MdPesqDocumentoExternoINT extends DocumentoINT{
 					$arrValores = $atributo->getElementsByTagName('valores');
 	
 					if ($arrValores->length==0){
-						//não mostra item que não possua valor
+						//nao mostra item que nao possua valor
 						if (!InfraString::isBolVazia($atributo->nodeValue)){
 							$strResultado .= $strNovaLinha.$strItemInicio.self::formatarTagConteudo($strTipoVisualizacao,$atributo->getAttribute('titulo')).$strItemFim.': '.$strNovaLinha.$strEspaco.$strEspaco.self::formatarTagConteudo($strTipoVisualizacao,$atributo->nodeValue);
 							$strResultado .= $strNovaLinha;
