@@ -550,7 +550,7 @@ try {
   if ($_POST['hdnFlagGerar']=='1'){
 
   		if(md5($_POST['txtCaptcha']) != $_POST['hdnCaptchaMd5'] && $_GET['hash'] !=  $_POST['hdnCaptchaMd5'] && $bolCaptchaGerarPdf == true){
-  			PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.');
+  			PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
   		
   		}else {
 
@@ -738,6 +738,7 @@ function gerarPdfModal(){
   	}
 	var modal = document.getElementById('divInfraModal');
 	modal.style.display = "block";
+    document.getElementById('txtCaptcha').focus();
 
 }
 
@@ -759,23 +760,25 @@ window.onclick = function(event) {
 ?>
 
 function gerarPdf() {
-  if (document.getElementById('hdnInfraItensSelecionados').value==''){
-    alert('Nenhum documento selecionado.');
-    return;
-  }
-  
-  <?
-	if($bolCaptchaGerarPdf){ 
-  ?>
-  	fecharPdfModal();
-  <?
-	}
-  ?>
+    if (document.getElementById('hdnInfraItensSelecionados').value == ''){
+        alert('Nenhum documento selecionado.');
+        return false;
+    }
 
-  infraExibirAviso(false);
-  
- document.getElementById('hdnFlagGerar').value = '1';
- document.getElementById('frmProcessoAcessoExternoConsulta').submit();
+    if (document.getElementById('txtCaptcha').value.length != 4){
+        $('.modal-alert-msg').html('<p class="alert alert-warning">Informe o código de confirmação!</p>');
+        document.getElementById('txtCaptcha').focus();
+        return false;
+    }
+
+    if(document.getElementById('hdnInfraItensSelecionados').value != '' && document.getElementById('txtCaptcha').value.length == 4){
+        <? if($bolCaptchaGerarPdf): ?>
+            fecharPdfModal();
+        <? endif; ?>
+        infraExibirAviso(false);
+        document.getElementById('hdnFlagGerar').value = '1';
+        document.getElementById('frmProcessoAcessoExternoConsulta').submit();
+    }
 }
 
 <?
@@ -785,39 +788,37 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo,'onload="inicializar();"')
 ?>
 
 <form id="frmProcessoAcessoExternoConsulta" method="post">
-<?
-if($bolCaptchaGerarPdf){
-	echo ' 
- 		<div id="divInfraModal" class="infraFundoTransparente" style="position: fixed; width: 100%; height: 100%; visibility: visible;">
- 		   <div id="divCaptcha"  class="infraAreaDados" style="height: 220px; width: 230px; background-color:white">
- 				<div class="modal-header">
-      				<span id="spnClose" class="close" onclick="fecharPdfModal();">×</span>
-      				<h2 style ="color: white;font-size: 1.2em;font-weight: bold;">Digite o Código da Imagem</h2>
-    			</div>
- 				<div class="modal-body">
- 		   			<label id="lblCaptcha" accesskey="" class="infraLabelObrigatorio">
- 		   			<div class="row">
- 		   			    <div class="col-sm-9 col-md-9 col-lg-9 col-xl-9">
- 		   			        <img src="/infra_js/infra_gerar_captcha.php?codetorandom='.$strCodigoParaGeracaoCaptcha.'" alt="Não foi possível carregar imagem de confirmação" /> </label>    
+
+<? if($bolCaptchaGerarPdf): ?>
+    <div id="divInfraModal" class="infraFundoTransparente" style="position: fixed; width: 100%; height: 100%; visibility: visible; background-image: none; background: rgba(0,0,0,.2); z-index: 9999">
+       <div id="divCaptcha"  class="infraAreaDados" style="margin: auto; position: absolute; top: -200px; left: 0; bottom: 0; right: 0; height: 280px; width: 400px; background-color: white; box-shadow: 0px 5px 10px rgba(0,0,0,.3)">
+            <div class="modal-header d-flex justify-content-end align-items-center" style="background: #155f9b; border-radius: 0px; padding: 5px 10px;">
+                <img title="Fechar janela" onmouseover="this.src=INFRA_PATH_JS + '/modal/fechar_vermelho.png'" onmouseout="this.src=INFRA_PATH_JS + '/modal/fechar_branco.png'" src="/infra_js/modal/fechar_branco.png" onclick="fecharPdfModal();" tabindex="1" width="24">
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="font-weight-bold text-center">Digite o código da imagem:</h6>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-center">
+                            <div style="width: 137px">
+                                <img src="/infra_js/infra_gerar_captcha.php?codetorandom=<?= $strCodigoParaGeracaoCaptcha; ?>" alt="Não foi possível carregar imagem de confirmação" />
+                                <input type="text" id="txtCaptcha" name="txtCaptcha" class="infraText form-control text-center mb-2" maxlength="4" value="" style="width: 137px" />
+                                <button id="btnEnviarCaptcha" type="button" accesskey="G" name="btnEnviarCaptcha" value="Enviar" onclick="gerarPdf();" class="infraButton" style="width: 137px"><span class="infraTeclaAtalho">E</span>nviar</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
- 		   			    <div class="col-sm-9 col-md-9 col-lg-9 col-xl-9">
-         		   			<input type="text" id="txtCaptcha" name="txtCaptcha" class="infraText form-control" maxlength="4" value="" /> 		   			    
-                        </div>
-                    </div>
-                    <div class="row">
- 		   			    <div class="col-sm-9 col-md-9 col-lg-9 col-xl-9 text-center">
- 		   			        <button id="btnEnviarCaptcha" type="submit" accesskey="G" name="btnEnviarCaptcha" value="Enviar" onclick="gerarPdf();" class="infraButton"><span class="infraTeclaAtalho">E</span>nviar</button>    
-                        </div>
-                    </div>
-  		   		</div>    			
-  			</div>
-    	</div>
-  			';
-			
-}
-PaginaSEIExterna::getInstance()->montarBarraComandosSuperior($arrComandos);
+                </div>
+                <div class="modal-alert-msg mt-2"></div>
+            </div>
+        </div>
+    </div>
+<? endif; ?>
+
+<? PaginaSEIExterna::getInstance()->montarBarraComandosSuperior($arrComandos);
 echo $strResultadoCabecalho;
 echo $strMensagemProcessoRestrito;
 PaginaSEIExterna::getInstance()->montarAreaTabela($strResultado,$numProtocolos);
@@ -849,7 +850,6 @@ if($bolGeracaoOK){
 					        if(modal.style.display == "block"){
 					        	fecharPdfModal();
 					        	gerarPdf();
-					    		
 					    	}
 					    }
 					});
