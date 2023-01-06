@@ -527,50 +527,50 @@ function partialFields() {
 	var idUnidadeAberto;
 	var mtName;
 	var mtValue;
-	var partFields = document.getElementById("partialfields");	
-	
+	var partFields = document.getElementById("partialfields");
+
 	for (x = 0; x < mt.length; x++) {
 		mtName = mt[x][0];
-		
+
 		if (document.getElementById(mt[x][1]).tagName.toLowerCase() == "input")
 			mtValue = utf8Encode(formatarCaracteresEspeciais(removerAcentos(trim(document.getElementById(mt[x][1]).value))));
 		else if (document.getElementById(mt[x][1]).tagName.toLowerCase() == "select") {
 			mtValue = utf8Encode(trim(document.getElementById(mt[x][1]).options[document.getElementById(mt[x][1]).selectedIndex].value));
 		}
-		
+
 		switch (mtName) {
-		
+
 			case "prot_pesq":
-				
+
 				//mtValue = mtValue.replace(/[^0-9]/g, "");
 				mtValue = mtValue.replace(/[^0-9a-zA-Z]/g, "");
-				
-			
-				
+
+
+
 				if (mtValue.length > 0 && mtValue.toUpperCase() != "NULL") {
 					if (partFields.value.length > 0) {
 						partFields.value += " AND ";
-					}					
+					}
 					partFields.value += mtName + ":*" + mtValue +"*";
 				}
 				break;
-				
+
 			default:
 				if (mtValue.length > 0 && mtValue.toUpperCase() != "NULL") {
-					
+
 					var bolCampoMultiplo = false;
-					
+
 					if (mtName == 'id_int' ||
 						mtName == 'id_rem' ||
-						mtName == 'id_dest' || 
-						mtName == 'id_assun' || 
+						mtName == 'id_dest' ||
+						mtName == 'id_assun' ||
 						mtName == 'id_uni_aces' ||
 						mtName == 'id_uni_aces' ||
 						mtName == 'id_assin'){
-						
+
 						bolCampoMultiplo = true;
-					}															
-					
+					}
+
 					if (partFields.value.length > 0) {
 						partFields.value += " AND ";
 					}
@@ -579,23 +579,23 @@ function partialFields() {
 					}else{
 						partFields.value += mtName + ":" + mtValue;
 					}
-					
+
 				}
-				
+
 				break;
 		}
-		
-		
+
+
 	}
-	
-	
+
+
 	// SIGLAS DOS USUÁRIOS
 	var strVerificacao = removerAcentos(trim(document.getElementById("hdnSiglasUsuarios").value));
-	
+
 	if (strVerificacao != ''){
-		
+
 	    var siglas = strVerificacao.split(',');
-	
+
 		if (siglas.length > 0) {
 			if (partFields.value.length > 0) {
 				partFields.value += " AND ";
@@ -603,42 +603,42 @@ function partialFields() {
 			partFields.value += "(id_usu_ger:" + siglas.join(" OR id_usu_ger:") + ")";
 		}
 	}
-	
+
 	// CHECKBOX DO PESQUISAR EM
-	
+
 	for (contador = 0; contador < mtCheckbox.length; contador += 1) {
 		var campo;
 		var campos;
 		var dados = [];
-		
+
 		for (campos = 1; campos < mtCheckbox[contador].length; campos += 1) {
 			campo = document.getElementById(mtCheckbox[contador][campos]);
-			
+
 			if (campo.checked) {
 				dados.push(campo.value);
 			}
 		}
-		
+
 		if (dados.length > 0) {
 			if (partFields.value.length > 0) {
 				partFields.value += " AND ";
 			}
-			
+
 			partFields.value += mtCheckbox[contador][0] + ":" + dados.join(";");
 		}
 	}
-	
+
     var dataInicio =  infraTrim(document.getElementById('txtDataInicio').value);
     var dataFim =  infraTrim(document.getElementById('txtDataFim').value);
-	
+
 	if (dataInicio!='' || dataFim!=''){
-		
+
 	   if (dataInicio != '' && !infraValidarData(document.getElementById('txtDataInicio'))){
-	     return false;	
+	     return false;
 	   }
-		
+
 	   if (dataFim!='' && !infraValidarData(document.getElementById('txtDataFim'))){
-	     return false;	
+	     return false;
 	   }
 
 	   if (dataInicio!='' && dataFim!='' && infraCompararDatas(dataInicio,dataFim) < 0){
@@ -646,11 +646,11 @@ function partialFields() {
 	     document.getElementById('txtDataInicio').focus();
 	     return false;
 	   }
-		
+
 		var dia1 = dataInicio.substr(0,2);
 		var mes1 = dataInicio.substr(3,2);
 		var ano1 = dataInicio.substr(6,4);
-		
+
 		var dia2 = dataFim.substr(0,2);
 		var mes2 = dataFim.substr(3,2);
 		var ano2 = dataFim.substr(6,4);
@@ -658,13 +658,17 @@ function partialFields() {
         if (partFields.value.length > 0) {
 			partFields.value += " AND ";
 		}
-		
+
+		const current_date = new Date();
+        const current_month = String(current_date.getMonth() + 1).padStart(2, '0');
+        const current_day = String(current_date.getDate()).padStart(2, '0');
+
 		if (dataInicio != '' && dataFim != '') {
-		  partFields.value += 'dta_ger:[' + ano1 + '-' + mes1 + '-' + dia1 + 'T00:00:00Z TO ' + ano2 + '-' + mes2 + '-' + dia2 +'T00:00:00Z]';
+		  partFields.value += '(dta_ger:[' + ano1 + '-' + mes1 + '-' + dia1 + 'T00:00:00Z TO ' + ano2 + '-' + mes2 + '-' + dia2 +'T00:00:00Z] OR dta_inc:[' + ano1 + '-' + mes1 + '-' + dia1 + 'T00:00:00Z TO ' + ano2 + '-' + mes2 + '-' + dia2 +'T00:00:00Z])';
 		}else if (dataInicio != ''){
-		  partFields.value += 'dta_ger:"'+ ano1 + '-' + mes1 + '-' + dia1 + 'T00:00:00Z"';	
+		  partFields.value += '(dta_ger:[' + ano1 + '-' + mes1 + '-' + dia1 + 'T00:00:00Z TO ' + current_date.getFullYear() + '-' + current_month + '-' + current_day +'T00:00:00Z] OR dta_inc:[' + ano1 + '-' + mes1 + '-' + dia1 + 'T00:00:00Z TO ' + current_date.getFullYear() + '-' + current_month + '-' + current_day +'T00:00:00Z])';
 		}else{
-		  partFields.value += 'dta_ger:"'+ ano2 + '-' + mes2 + '-' + dia2 + 'T00:00:00Z"';	
+		  partFields.value += '(dta_ger:[1899-08-01T00:00:00Z TO ' + ano2 + '-' + mes2 + '-' + dia2 +'T00:00:00Z] OR dta_inc:[1899-08-01T00:00:00Z TO ' + ano2 + '-' + mes2 + '-' + dia2 +'T00:00:00Z])';
 		}
 	}
 	

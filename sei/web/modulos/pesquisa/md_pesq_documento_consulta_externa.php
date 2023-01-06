@@ -27,8 +27,9 @@ try {
 
 	$arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO($arrObjParametroPesquisaDTO,'Valor','Nome');
 
-	$bolListaDocumentoProcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
-	$bolListaDocumentoProcessoPublico = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO] == 'S' ? true : false;
+	$bolListaDocumentoProcessoRestrito  = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
+	$bolListaDocumentoProcessoPublico   = true; // Forcando para inutilizar o parametro
+    $bolLinkMetadadosProcessoRestrito   = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO] == 'S' ? true : false;
 
 	$objDocumentoDTO = new DocumentoDTO();
 	$objDocumentoDTO->retDblIdDocumento();
@@ -44,18 +45,45 @@ try {
 	$objDocumentoDTO->retNumIdUnidadeGeradoraProtocolo();
 	$objDocumentoDTO->retStrStaNivelAcessoGlobalProtocolo();
 	$objDocumentoDTO->retStrStaNivelAcessoLocalProtocolo();
+	$objDocumentoDTO->retDtaInclusaoProtocolo();
+	$objDocumentoDTO->retDtaGeracaoProtocolo();
 	$objDocumentoDTO->setDblIdDocumento($_GET['id_documento']);
 
 	$objDocumentoRN = new DocumentoRN();
 	$objDocumentoDTO = $objDocumentoRN->consultarRN0005($objDocumentoDTO);
 
-	if ($objDocumentoDTO==null){
+	$isLocalPublico = $objDocumentoDTO->getStrStaNivelAcessoGlobalProtocolo() == ProtocoloRN::$NA_PUBLICO;
+	$isGlobalPublico = $objDocumentoDTO->getStrStaNivelAcessoGlobalProtocolo() == ProtocoloRN::$NA_PUBLICO;
+
+	if ($objDocumentoDTO==null || !$bolLinkMetadadosProcessoRestrito){
 	 die('Documento não encontrado.');
 	}
 
-	if(!$bolListaDocumentoProcessoPublico){
+	if(!$bolListaDocumentoProcessoPublico && $isLocalPublico){
 	 die('Documento não encontrado');
 	}
+
+    $dtaCorteDoc = $objDocumentoDTO->getDtaInclusaoProtocolo();
+
+    if($objDocumentoDTO->getStrStaProtocoloProtocolo() == ProtocoloRN::$TP_DOCUMENTO_GERADO && in_array($objDocumentoDTO->getStrStaDocumento(), [DocumentoRN::$TD_EDITOR_INTERNO, DocumentoRN::$TD_FORMULARIO_GERADO])){
+        $objAssinaturaDTO = new AssinaturaDTO();
+        $objAssinaturaDTO->retDthAberturaAtividade();
+        $objAssinaturaDTO->setDblIdDocumento($objDocumentoDTO->getDblIdDocumento());
+        $objAssinaturaDTO->setOrdNumIdAssinatura(InfraDTO::$TIPO_ORDENACAO_ASC);
+        $objAssinaturaDTO->setNumMaxRegistrosRetorno(1);
+        $arrObjAssinaturaDTO = (new AssinaturaRN())->listarRN1323($objAssinaturaDTO);
+
+        if (!empty($arrObjAssinaturaDTO)) {
+            if($arrObjAssinaturaDTO[0] != null && $arrObjAssinaturaDTO[0]->isSetDthAberturaAtividade()){
+                $dtaCorteDoc = substr($arrObjAssinaturaDTO[0]->getDthAberturaAtividade(),0,10);
+            }
+        }
+    }
+
+    $dtaCortePesquisa = (new MdPesqParametroPesquisaRN())->existeDataCortePesquisa();
+	if($bolListaDocumentoProcessoPublico && $dtaCortePesquisa && $dtaCortePesquisa > date('Y-m-d', strtotime(str_replace('/', '-', $dtaCorteDoc)))){
+        die('Documento não encontrado');
+    }
 
 	$objProtocoloProcedimentoDTO = new ProtocoloDTO();
 	$objProtocoloProcedimentoDTO->setDblIdProtocolo($objDocumentoDTO->getDblIdProcedimento());

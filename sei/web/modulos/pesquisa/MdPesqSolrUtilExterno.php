@@ -112,12 +112,14 @@ class MdPesqSolrUtilExterno
     }
 
     //Cria a navegacao completa
-    public static function criarBarraNavegacao($totalRes, $inicio, $numResPorPag, $objPagina, $objSessao, $md5Captcha = null, $strControlador = 'md_pesq_processo_pesquisar.php')
+    public static function criarBarraNavegacao($totalRes, $inicio, $numResPorPag, $objPagina, $objSessao, $md5Captcha = null, $strControlador = 'md_pesq_processo_pesquisar.php', $position = 'bottom')
     {
         if ($totalRes == 0)
             return;
 
-        $nav = "<div class=\"pesquisaPaginas d-flex flex-column flex-md-row text-align-center\">";
+        $styleTop = ($position == 'top') ? 'border-top: none; padding: 2em 0 0.5em 0; border-bottom: 0.1em solid #909090; margin-top: 20px' : '';
+
+        $nav = '<div class="pesquisaPaginas d-flex flex-column flex-md-row text-align-center" style="'.$styleTop.'">';
 
         $paginaAtual = $inicio / $numResPorPag + 1;
 

@@ -30,6 +30,9 @@ try {
 
     $bolCaptcha = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA] == 'S' ? true : false;
     $bolAutocompletarInterressado = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
+    $strLinkAjaxPesquisar = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar');
+    $strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload');
+
 
     MdPesqPesquisaUtil::valiadarLink();
 
@@ -55,7 +58,8 @@ try {
             PaginaSEIExterna::getInstance()->salvarCampo('chkSinDocumentosGerados', $_POST['chkSinDocumentosGerados']);
             PaginaSEIExterna::getInstance()->salvarCampo('chkSinDocumentosRecebidos', $_POST['chkSinDocumentosRecebidos']);
 
-            PaginaSEIExterna::getInstance()->salvarCamposPost(array('q',
+            PaginaSEIExterna::getInstance()->salvarCamposPost(array(
+                'q',
                 'txtParticipante',
                 'hdnIdParticipante',
                 'txtAssinante',
@@ -250,6 +254,8 @@ PaginaSEIExterna::getInstance()->abrirStyle();
     .infraImgModulo{vertical-align: middle;}
     #txtDataInicio{width:70%;}
     #txtDataFim{width:70%;}
+    .captcha-loader {overflow: hidden}
+    .capload { position: absolute; width: 140px; height: 45px; top: 10px; background: rgba(255,255,255,.9); z-index: 99; text-align: center; padding-top: 15px; display: none }
 
 <?php
 PaginaSEIExterna::getInstance()->fecharStyle();
@@ -370,17 +376,103 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
     }
     }
 
-    function onSubmitForm(){
 
-    if (!document.getElementById('chkSinProcessos').checked && !document.getElementById('chkSinDocumentosGerados').checked && !document.getElementById('chkSinDocumentosRecebidos').checked){
-    alert('Selecione pelo menos uma das opções de pesquisa avançada: Processos, Documentos Gerados ou Documento Recebidos');
-    return false;
+    function onSubmitForm(e){
+
+        if (!document.getElementById('chkSinProcessos').checked && !document.getElementById('chkSinDocumentosGerados').checked && !document.getElementById('chkSinDocumentosRecebidos').checked){
+            alert('Selecione pelo menos uma das opções de pesquisa avançada: Processos, Documentos Gerados ou Documento Recebidos');
+            return false;
+        }
+
+        limpaFields();
+        partialFields();
+
     }
 
-    limpaFields();
-    return partialFields();
+    $(document).ready(function(){
 
-    }
+        var paginar     = true;
+        var formChanged = false;
+        var buscaInicio = 0;
+        var rowsSolr    = 50;
+
+        partialFields();
+
+        var initdata = $('#seiSearch').serialize();
+
+        $('#seiSearch').on('keyup change paste', 'input, select, textarea', function(){
+            formChanged = pesquisar = true;
+        });
+
+        var timer;
+        $('#divInfraAreaTelaD').on('scroll', function() {
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                if(($('#divInfraAreaTelaD').prop('scrollHeight') - $('#divInfraAreaTelaD').scrollTop()) <= Math.ceil($('#divInfraAreaTelaD').height()) && paginar) {
+                    $('.ajax-loading').show();
+                    $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=true&inicio='+buscaInicio+'&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
+                        if($(data).find('resultado').length > 0){
+                            $('.retorno-ajax > table > tbody:last-child').append($(data).find('resultado').html());
+                            buscaInicio += rowsSolr;
+                        }
+                        if($(data).find('consultavazia').length > 0){
+                            $('.total-registros-infinite').html('A pesquisa encontrou '+$('.retorno-ajax > table tbody tr.pesquisaTituloRegistro').length+' resultado(s).');
+                            paginar = false;
+                            updateCaptcha();
+                        }
+                    }).always(function() {
+                        $('.ajax-loading').hide();
+                    });
+                }
+            }, 500);
+        });
+
+        $('body').on('submit', '#seiSearch', function(e){
+            e.preventDefault(); e.stopPropagation();
+            $('input[name=partialfields]').val('');
+            partialFields();
+
+            $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
+            $('.total-registros-infinite').empty();
+
+            $('.ajax-loading').show();
+            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio=0&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
+                if($(data).find('resultado').length > 0){
+                    $('.retorno-ajax > table > tbody:last-child').append($(data).find('resultado').html());
+                    buscaInicio += rowsSolr;
+                }
+                if($(data).find('consultavazia').length > 0){
+                    $('.retorno-ajax').append($(data).find('consultavazia').html());
+                }
+            }).always(function() {
+                $('.ajax-loading').hide();
+                updateCaptcha();
+            });
+
+        });
+
+        $('body').on('reset', '#seiSearch', function(e){
+            $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
+            $('.total-registros-infinite').empty();
+            $('input[name=txtProtocoloPesquisa]').focus();
+            pesquisar = true;
+        });
+
+        function updateCaptcha(){
+            $('.capload').show();
+            $.post('<?= $strLinkAjaxCaptchaReload ?>').done(function(data){
+                if($(data).find('captcha').length > 0){
+                    $('img#imgCaptcha').attr('src', $(data).find('scrImgCaptcha').html());
+                    $('input#hdnCaptchaMd5').val($(data).find('md5Captcha').html());
+                    $('input#txtCaptcha').val('');
+                }
+            }).always(function() {
+                setTimeout(function(){$('.capload').hide()}, 350);
+            });
+        }
+
+    });
+
 
     function exibirAvancado(){
 
@@ -409,7 +501,7 @@ PaginaSEIExterna::getInstance()->fecharJavaScript();
 PaginaSEIExterna::getInstance()->fecharHead();
 PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"');
 ?>
-    <form id="seiSearch" name="seiSearch" method="post" onsubmit="return onSubmitForm();"
+    <form id="seiSearch" name="seiSearch" method="post" class="mb-5"
           action="<?= PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('md_pesq_processo_pesquisar.php?acao_externa=' . $_GET['acao_externa'] . '&acao_origem_externa=' . $_GET['acao_externa'] . $strParametros)) ?>">
 
         <div class="row">
@@ -417,7 +509,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                 <div class="row" id="divGeral">
                     <div class="col-sm-12 col-md-4 col-lg-3 col-xl-3">
                         <label id="lblProtocoloPesquisa" for="txtProtocoloPesquisa" accesskey=""
-                               class="infraLabelOpcional">Nº Processo / Documento:</label>
+                               class="infraLabelOpcional">Nº SEI<br>(protocolo Processo/Documento):</label>
                     </div>
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
                         <input type="text" id="txtProtocoloPesquisa" name="txtProtocoloPesquisa"
@@ -428,10 +520,10 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                 </div>
                 <div class="row" id="divAvancado">
                     <div class="col-sm-12 col-md-4 col-lg-3 col-xl-3">
-                        <label id="lblPalavrasPesquisa" for="q" accesskey="" class="infraLabelOpcional">Pesquisa Livre:</label>
+                        <label id="lblPalavrasPesquisa" for="q" accesskey="" class="infraLabelOpcional">Texto para Pesquisa:</label>
                     </div>
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
-                        <div class="input-group mb-3">
+                        <div class="input-group mb-0">
                             <input type="text" id="q" name="q" class="infraText form-control" style="width: 85%"
                                    value="<?= str_replace('\\', '', str_replace('"', '&quot;', PaginaSEIExterna::tratarHTML($strPalavrasPesquisa))) ?>" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
                             <a id="ancAjuda" href="<?= $strLinkAjuda ?>" target="janAjuda" title="Ajuda para Pesquisa" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>">
@@ -497,14 +589,14 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                     </div>
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
                         <div class="row">
-                            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-5">
+                            <div class="col-6 col-lg-4 col-xl-5">
                                 <div class="input-group mb-3 data">
                                     <input type="text" id="txtDataInicio" name="txtDataInicio" onkeypress="return infraMascaraData(this, event)" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strDataInicio); ?>" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
                                     <img id="imgDataInicio" src="<?= PaginaSEIExterna::getInstance()->getDiretorioSvgGlobal() ?>/calendario.svg" onclick="infraCalendario('txtDataInicio',this);" alt="Selecionar Data Inicial" title="Selecionar Data Inicial" class="infraImgModulo" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
 									<label id="lblDataE" for="txtDataE" accesskey="" class="infraLabelOpcional">&nbsp;e&nbsp;</label>
                                 </div>
                             </div>
-                            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-5">
+                            <div class="col-6 col-lg-4 col-xl-5">
                                 <div class="input-group mb-3 data">
                                     <input type="text" id="txtDataFim" name="txtDataFim" onkeypress="return infraMascaraData(this, event)" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strDataFim); ?>" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
 									<img id="imgDataFim" src="<?= PaginaSEIExterna::getInstance()->getDiretorioSvgGlobal() ?>/calendario.svg" onclick="infraCalendario('txtDataFim',this);" alt="Selecionar Data Final" title="Selecionar Data Final" class="infraImgModulo" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
@@ -514,32 +606,29 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                     </div>
                 </div>
             </div>
-            <div class="col-sm-12 col-md-3 col-lg-3 col-xl-4">
+            <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                 <? if ($bolCaptcha) { ?>
-                    <div class="row">
-                        <div class="col-sm-12 col-md-10 col-lg-10 col-xl-3">
-                            <label id="lblCaptcha" accesskey="" class="infraLabelObrigatorio">
-                                <img src="/infra_js/infra_gerar_captcha.php?codetorandom=<?= $strCodigoParaGeracaoCaptcha; ?>" alt="Não foi possível carregar imagem de confirmação"/> </label>
+                    <div class="captcha-loader">
+                        <div class="capload"><img src="../../../infra_css/svg/aguarde.svg" alt="" style="d-inline-block"></div>
+                        <div class="row">
+                            <div class="col-sm-12 col-md-10 col-lg-10 col-xl-4">
+                                <label id="lblCaptcha" accesskey="" class="infraLabelObrigatorio d-block" style="width: 140px">
+                                    <img id="imgCaptcha" src="/infra_js/infra_gerar_captcha.php?codetorandom=<?= $strCodigoParaGeracaoCaptcha; ?>" alt="Não foi possível carregar imagem de confirmação"/>
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                <? } ?>
-                <? if ($bolCaptcha) { ?>
-                    <div class="row">
-                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-4">
-                            <label id="lblCodigo" for="txtCaptcha" accesskey="" class="infraLabelOpcional">Digite o código: </label><br/>
-                            <input type="text" id="txtCaptcha" name="txtCaptcha" class="infraText form-control" maxlength="4" value=""/><br/>
+                        <div class="row">
+                            <div class="col-sm-12 col-md-10 col-lg-5 col-xl-4">
+                                <label id="lblCodigo" for="txtCaptcha" accesskey="" class="infraLabelOpcional">Digite o código: </label><br/>
+                                <input type="text" id="txtCaptcha" name="txtCaptcha" class="infraText form-control" maxlength="4" value="" style="width: 140px"/><br/>
+                            </div>
                         </div>
                     </div>
                 <? } ?>
                 <div class="row">
-                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6">
-                        <? if ($bolCaptcha) { ?>
-                            <input type="submit" id="sbmPesquisar" name="sbmPesquisar" value="Pesquisar" class="infraButton"/>
-                            <input type="submit" id="sbmLimpar" name="sbmLimpar" value="Limpar" class="infraButton"/>
-                        <? } else { ?>
-                            <input type="submit" id="sbmPesquisar" name="sbmPesquisar" value="Pesquisar" class="infraButton"/>
-                            <input type="submit" id="sbmLimpar" name="sbmLimpar" value="Limpar" class="infraButton"/>
-                        <? } ?>
+                    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 mt-4 mt-sm-4 mt-xl-0 mt-lg-0 mt-md-0">
+                        <input type="submit" id="sbmPesquisar" name="sbmPesquisar" value="Pesquisar" class="infraButton"/>
+                        <input type="reset" id="sbmLimpar" name="sbmLimpar" value="Limpar" class="infraButton"/>
                     </div>
                 </div>
             </div>
@@ -563,21 +652,34 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
         <input id="requiredfields" name="requiredfields" type="hidden" value=""/>
         <input id="as_q" name="as_q" type="hidden" value=""/>
         <input type="hidden" id="hdnFlagPesquisa" name="hdnFlagPesquisa" value="1"/>
+    </form>
+
+    <div id="conteudo" class="retorno-ajax" style="width:99%;">
+        <table border="0" class="pesquisaResultado">
+            <tbody></tbody>
+        </table>
+        <div class="ajax-loading" style="position: absolute; width: 97%; background: #F8F8F8; padding: 7px 10px 4px; text-align: center; display: none;">
+            <div class="d-flex justify-content-center align-items-center">
+                <img src="../../../infra_css/svg/aguarde.svg" alt="" style="d-inline-block">
+                <span>Pesquisando...</span>
+            </div>
+        </div>
+        <div class="total-registros-infinite"></div>
+    </div>
         <?
 
-        if ($strResultado != '') {
-            echo '<div class="row">';
-            echo '<div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">';
-            echo '<div id="conteudo" style="width:99%;" class="infraAreaTabela">';
-            echo $strResultado;
-            echo '</div>';
-            echo '</div>';
-            echo '</div>';
-        }
+//        if ($strResultado != '') {
+//            echo '<div class="row">';
+//            echo '<div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">';
+//            echo '<div id="conteudo" style="width:99%;" class="infraAreaTabela">';
+//            echo $strResultado;
+//            echo '</div>';
+//            echo '</div>';
+//            echo '</div>';
+//        }
 
         PaginaSEIExterna::getInstance()->montarAreaDebug();
         ?>
-    </form>
 <?
 PaginaSEIExterna::getInstance()->fecharBody();
 PaginaSEIExterna::getInstance()->fecharHtml();
