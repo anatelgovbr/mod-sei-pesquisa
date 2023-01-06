@@ -23,7 +23,7 @@ class MdPesqBuscaProtocoloExterno{
 
         $bolPesquisaDocumentoProcessoRestrito   = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_PESQUISA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
         $bolListaDocumentoProcessoRestrito      = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
-        $bolListaDocumentoProcessoPublico       = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO] == 'S' ? true : false;
+        $bolListaDocumentoProcessoPublico       = true; // Forcando para inutilizar o parametro
         $bolLinkMetadadosProcessoRestrito       = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO] == 'S' ? true : false;
         $bolAutocompletarInterressado           = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
         $txtDescricaoProcedimentoAcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO];
@@ -53,16 +53,14 @@ class MdPesqBuscaProtocoloExterno{
             array_push($grupo, "(sta_prot:P)");
         }
 
-        if($bolListaDocumentoProcessoPublico){
-            // PESQUISAR EM DOCUMENTOS EXTERNOS (RECEBIDOS)
-            if (in_array("R", $checkbox)) {
-                array_push($grupo, "(sta_prot:R)");
-            }
+        // PESQUISAR EM DOCUMENTOS EXTERNOS (RECEBIDOS)
+        if (in_array("R", $checkbox)) {
+            array_push($grupo, "(sta_prot:R)");
+        }
 
-            // PESQUISAR EM DOCUMENTOS INTERNOS (GERADOS)
-            if (in_array("G", $checkbox)) {
-                array_push($grupo, "(sta_prot:G)");
-            }
+        // PESQUISAR EM DOCUMENTOS INTERNOS (GERADOS)
+        if (in_array("G", $checkbox)) {
+            array_push($grupo, "(sta_prot:G)");
         }
 
         if (count($grupo) > 0) {
@@ -252,12 +250,14 @@ class MdPesqBuscaProtocoloExterno{
             }
 
             // Protege contra a não idexação no solr quando o processo ou documento passa de público para restrito ou quando o documento possui intimações não cumpridas:
-            $isProcesso = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
+            $isProcesso     = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
+            $isDocumento    = $objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO;
+
             if(
                 ( $isProcesso && $objProtocoloDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_SIGILOSO ) ||
-                ( !$isPublico && !is_null($pesquisaLivre) && ($pesquisaLivre != InfraSolrUtil::obterTag($registros[$i], 'prot_doc', 'str') || $pesquisaLivre == '\*') ) ||
-                ( !$isProcesso && !$bolListaDocumentoProcessoRestrito && (!empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) ) ||
-                ( !$isProcesso && !$bolListaDocumentoProcessoPublico && (!empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_PUBLICO) )
+                ( $isDocumento && !$isPublico && !is_null($pesquisaLivre) && ($pesquisaLivre != InfraSolrUtil::obterTag($registros[$i], 'prot_doc', 'str') || $pesquisaLivre == '\*') ) ||
+                ( !$bolListaDocumentoProcessoPublico && ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_PUBLICO) ) ||
+                ( !$bolListaDocumentoProcessoRestrito && ( ($isDocumento && !$isPublico) || ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) ) )
             ){
                 $removidos++;
                 continue;
@@ -389,7 +389,7 @@ class MdPesqBuscaProtocoloExterno{
                     $parametrosCriptografadosDocumentos = MdPesqCriptografia::criptografa('acao_externa=md_pesq_documento_exibir&id_orgao_acesso_externo=0&id_documento=' . $objDocumentoDTO->getDblIdDocumento());
                     $endereco = 'md_pesq_documento_consulta_externa.php?' . $parametrosCriptografadosDocumentos;
                     $titulo .= "(<a title=\"Acessar\" target=\"_blank\" href=\"" . PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink($endereco)) . "\" onClick=\"infraLimparFormatarTrAcessada(this.parentNode.parentNode);\"";
-                    $titulo .= " class=\"protocoloNormal\" >" . trim($dados["identificacao_protocolo"]) ."</a>)";
+                    $titulo .= " class=\"protocoloNormal\" style=\"padding:0px\">" . trim($dados["identificacao_protocolo"]) ."</a>)";
                     $strProtocoloDocumento .= "<a title=\"Acessar\" target=\"_blank\" href=\"" . PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink($endereco)) . "\" class=\"protocoloNormal processoVisitado\" onClick=\"infraLimparFormatarTrAcessada(this.parentNode.parentNode);\">";
                     $strProtocoloDocumento .= $dados["protocolo_documento_formatado"];
                     $strProtocoloDocumento .= "</a>";

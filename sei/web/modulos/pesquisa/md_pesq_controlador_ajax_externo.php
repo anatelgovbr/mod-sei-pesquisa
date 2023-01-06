@@ -119,7 +119,7 @@ try{
             $objMdPesqParametroPesquisaDTO = (new MdPesqParametroPesquisaRN())->consultar($objMdPesqParametroPesquisaDTO);
 
             if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
-                if (md5($_POST['txtCaptcha']) != $_POST['hdnCaptchaMd5'] && $_GET['hash'] != $_POST['hdnCaptchaMd5'] && $bolCaptcha == true) {
+                if ((md5($_POST['txtCaptcha']) != $_POST['hdnCaptchaMd5'] && $_GET['hash'] != $_POST['hdnCaptchaMd5'] && $bolCaptcha == true) && $_GET['isPaginacao'] == 'false') {
                     $xml = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">Código de confirmação inválido.</p></div></consultavazia>';
                 } else {
                     if (!InfraString::isBolVazia($q) || $bolPreencheuAvancado) {
@@ -133,6 +133,22 @@ try{
                 }
             } else {
                 $xml = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.</p></div></consultavazia>';
+            }
+            break;
+
+        case 'protocolo_pesquisar_captcha_reload':
+            $xml = '';
+
+            $objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
+            $objParametroPesquisaDTO->retStrNome();
+            $objParametroPesquisaDTO->retStrValor();
+            $arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO((new MdPesqParametroPesquisaRN())->listar($objParametroPesquisaDTO), 'Valor', 'Nome');
+
+            if ($arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA] == 'S') {
+                $strCodigoParaGeracaoCaptcha = InfraCaptcha::obterCodigo();
+                $md5Captcha = md5(InfraCaptcha::gerar($strCodigoParaGeracaoCaptcha));
+                $srcImgCaptcha = '/infra_js/infra_gerar_captcha.php?codetorandom='.$strCodigoParaGeracaoCaptcha;
+                $xml = '<captcha><scrImgCaptcha>'.$srcImgCaptcha.'</scrImgCaptcha><md5Captcha>'.$md5Captcha.'</md5Captcha></captcha>';
             }
             break;
 		

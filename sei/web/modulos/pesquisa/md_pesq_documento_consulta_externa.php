@@ -28,7 +28,7 @@ try {
 	$arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO($arrObjParametroPesquisaDTO,'Valor','Nome');
 
 	$bolListaDocumentoProcessoRestrito  = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
-	$bolListaDocumentoProcessoPublico   = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO] == 'S' ? true : false;
+	$bolListaDocumentoProcessoPublico   = true; // Forcando para inutilizar o parametro
     $bolLinkMetadadosProcessoRestrito   = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO] == 'S' ? true : false;
 
 	$objDocumentoDTO = new DocumentoDTO();

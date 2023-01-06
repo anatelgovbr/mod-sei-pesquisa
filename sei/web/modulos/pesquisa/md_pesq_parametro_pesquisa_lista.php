@@ -183,25 +183,27 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
             <div class="col-sm-12 col-md-12 col-lg-10 col-xl-10">
                 <fieldset class="infraFieldset sizeFieldset form-control" style="height: auto">
                     <legend class="infraLegend">Parâmetros de Pesquisa</legend>
-                    <div class="row">
-                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
-                            <div class="form-group">
-                                <div>
-                                    <label id="lblListaAndamentoProcessoPublico" for="chkListaAndamentoProcessoPublico" class="infraLabelObrigatorio">
-                                        Exibir Lista de Andamentos nos processos com nível de acesso global Público:
-                                        <a id="btAjuda" tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"
-                                           onmouseover="return infraTooltipMostrar('Quando habilitado (Opção Padrão), na tela do Processo na Pesquisa Pública será exibida a Lista de Andamentos quando o processo tiver nível de acesso global &quot;Público&quot;.\n \n Quando desabilitado, a Lista de Andamentos não será exibida mesmo quando o processo tiver nível de acesso global &quot;Público&quot;.','Ajuda');" onmouseout="return infraTooltipOcultar();">
-                                            <img border="0" class="infraImgModulo" src="/infra_css/svg/ajuda.svg?11">
-                                        </a>
-                                    </label>
+                    <?php if(1 == 2): ?>
+                        <div class="row d-none">
+                            <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
+                                <div class="form-group">
+                                    <div>
+                                        <label id="lblListaAndamentoProcessoPublico" for="chkListaAndamentoProcessoPublico" class="infraLabelObrigatorio">
+                                            Exibir Lista de Andamentos nos processos com nível de acesso global Público:
+                                            <a id="btAjuda" tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"
+                                               onmouseover="return infraTooltipMostrar('Quando habilitado (Opção Padrão), na tela do Processo na Pesquisa Pública será exibida a Lista de Andamentos quando o processo tiver nível de acesso global &quot;Público&quot;.\n \n Quando desabilitado, a Lista de Andamentos não será exibida mesmo quando o processo tiver nível de acesso global &quot;Público&quot;.','Ajuda');" onmouseout="return infraTooltipOcultar();">
+                                                <img border="0" class="infraImgModulo" src="/infra_css/svg/ajuda.svg?11">
+                                            </a>
+                                        </label>
+                                    </div>
+                                    <input id="chkListaAndamentoProcessoPublico" name="chkListaAndamentoProcessoPublico" type="radio" value="S" class="infraRadio" <?= ($arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO] == 'S') ? "checked" : "" ?> tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"/>
+                                    <label id="lblListaAndamentoProcessoPublico" for="chkListaAndamentoProcessoPublico" class="infraLabelRadio">Sim</label>
+                                    <input id="chkListaAndamentoProcessoPublicoNao" name="chkListaAndamentoProcessoPublico" type="radio" value="N" class="infraRadio" <?= ($arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO] == 'N') ? "checked" : "" ?> tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"/>
+                                    <label id="lblListaAndamentoProcessoPublicoNao" for="chkListaAndamentoProcessoPublicoNao" class="infraLabelRadio">Não</label>
                                 </div>
-                                <input id="chkListaAndamentoProcessoPublico" name="chkListaAndamentoProcessoPublico" type="radio" value="S" class="infraRadio" <?= ($arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO] == 'S') ? "checked" : "" ?> tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"/>
-                                <label id="lblListaAndamentoProcessoPublico" for="chkListaAndamentoProcessoPublico" class="infraLabelRadio">Sim</label>
-                                <input id="chkListaAndamentoProcessoPublicoNao" name="chkListaAndamentoProcessoPublico" type="radio" value="N" class="infraRadio" <?= ($arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO] == 'N') ? "checked" : "" ?> tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"/>
-                                <label id="lblListaAndamentoProcessoPublicoNao" for="chkListaAndamentoProcessoPublicoNao" class="infraLabelRadio">Não</label>
                             </div>
                         </div>
-                    </div>
+                    <?php endif; ?>
                     <div class="row">
                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
                             <div class="form-group">
@@ -221,8 +223,8 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
                             </div>
                         </div>
                     </div>
-
-                    <div class="row">
+                    <?php if(1 == 2): ?>
+                    <div class="row d-none">
                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
                             <div class="form-group">
                                 <div>
@@ -241,6 +243,8 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
                             </div>
                         </div>
                     </div>
+                    <?php endif; ?>
+
                     <div class="row">
                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
                             <div class="form-group">

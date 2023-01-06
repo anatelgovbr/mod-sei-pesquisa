@@ -31,6 +31,7 @@ try {
     $bolCaptcha = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA] == 'S' ? true : false;
     $bolAutocompletarInterressado = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
     $strLinkAjaxPesquisar = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar');
+    $strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload');
 
 
     MdPesqPesquisaUtil::valiadarLink();
@@ -253,6 +254,8 @@ PaginaSEIExterna::getInstance()->abrirStyle();
     .infraImgModulo{vertical-align: middle;}
     #txtDataInicio{width:70%;}
     #txtDataFim{width:70%;}
+    .captcha-loader {overflow: hidden}
+    .capload { position: absolute; width: 140px; height: 45px; top: 10px; background: rgba(255,255,255,.9); z-index: 99; text-align: center; padding-top: 15px; display: none }
 
 <?php
 PaginaSEIExterna::getInstance()->fecharStyle();
@@ -388,7 +391,7 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
 
     $(document).ready(function(){
 
-        var pesquisar   = true;
+        var paginar     = true;
         var formChanged = false;
         var buscaInicio = 0;
         var rowsSolr    = 50;
@@ -405,48 +408,45 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
         $('#divInfraAreaTelaD').on('scroll', function() {
             clearTimeout(timer);
             timer = setTimeout(function() {
-                if(($('#divInfraAreaTelaD').prop('scrollHeight') - $('#divInfraAreaTelaD').scrollTop()) <= Math.ceil($('#divInfraAreaTelaD').height()) && pesquisar) {
-                    $('#seiSearch').submit();
+                if(($('#divInfraAreaTelaD').prop('scrollHeight') - $('#divInfraAreaTelaD').scrollTop()) <= Math.ceil($('#divInfraAreaTelaD').height()) && paginar) {
+                    $('.ajax-loading').show();
+                    $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=true&inicio='+buscaInicio+'&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
+                        if($(data).find('resultado').length > 0){
+                            $('.retorno-ajax > table > tbody:last-child').append($(data).find('resultado').html());
+                            buscaInicio += rowsSolr;
+                        }
+                        if($(data).find('consultavazia').length > 0){
+                            $('.total-registros-infinite').html('A pesquisa encontrou '+$('.retorno-ajax > table tbody tr.pesquisaTituloRegistro').length+' resultado(s).');
+                            paginar = false;
+                            updateCaptcha();
+                        }
+                    }).always(function() {
+                        $('.ajax-loading').hide();
+                    });
                 }
             }, 500);
         });
 
         $('body').on('submit', '#seiSearch', function(e){
             e.preventDefault(); e.stopPropagation();
-
             $('input[name=partialfields]').val('');
             partialFields();
 
-            var self = $(this);
-            var nowdata = self.serialize();
-
-            if(initdata != nowdata || (!pesquisar && confirm($('.total-registros-infinite').html()+'\n\nDeseja realizar nova pesquisa?'))){
-                $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
-                $('.total-registros-infinite').empty();
-                initdata = nowdata;
-                buscaInicio = 0;
-                pesquisar = true;
-            }
+            $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
+            $('.total-registros-infinite').empty();
 
             $('.ajax-loading').show();
-            $.post('<?= $strLinkAjaxPesquisar ?>&inicio='+buscaInicio+'&rowsSolr='+rowsSolr, nowdata).done(function(data){
+            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio=0&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
                 if($(data).find('resultado').length > 0){
                     $('.retorno-ajax > table > tbody:last-child').append($(data).find('resultado').html());
-                    $('.sem-resultado').remove();
                     buscaInicio += rowsSolr;
                 }
                 if($(data).find('consultavazia').length > 0){
-                    if($('.retorno-ajax > table tbody tr').length == 0){
-                        $('.sem-resultado').remove();
-                        $('.retorno-ajax').append($(data).find('consultavazia').html());
-                    }else{
-                        $('.total-registros-infinite').html('A pesquisa encontrou '+$('.retorno-ajax > table tbody tr.pesquisaTituloRegistro').length+' resultado(s).');
-                        pesquisar = false;
-                    }
+                    $('.retorno-ajax').append($(data).find('consultavazia').html());
                 }
             }).always(function() {
                 $('.ajax-loading').hide();
-                console.log(pesquisar);
+                updateCaptcha();
             });
 
         });
@@ -457,6 +457,19 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             $('input[name=txtProtocoloPesquisa]').focus();
             pesquisar = true;
         });
+
+        function updateCaptcha(){
+            $('.capload').show();
+            $.post('<?= $strLinkAjaxCaptchaReload ?>').done(function(data){
+                if($(data).find('captcha').length > 0){
+                    $('img#imgCaptcha').attr('src', $(data).find('scrImgCaptcha').html());
+                    $('input#hdnCaptchaMd5').val($(data).find('md5Captcha').html());
+                    $('input#txtCaptcha').val('');
+                }
+            }).always(function() {
+                setTimeout(function(){$('.capload').hide()}, 350);
+            });
+        }
 
     });
 
@@ -593,32 +606,29 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                     </div>
                 </div>
             </div>
-            <div class="col-sm-12 col-md-3 col-lg-3 col-xl-4">
+            <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                 <? if ($bolCaptcha) { ?>
-                    <div class="row">
-                        <div class="col-sm-12 col-md-10 col-lg-10 col-xl-3">
-                            <label id="lblCaptcha" accesskey="" class="infraLabelObrigatorio">
-                                <img src="/infra_js/infra_gerar_captcha.php?codetorandom=<?= $strCodigoParaGeracaoCaptcha; ?>" alt="Não foi possível carregar imagem de confirmação"/> </label>
+                    <div class="captcha-loader">
+                        <div class="capload"><img src="../../../infra_css/svg/aguarde.svg" alt="" style="d-inline-block"></div>
+                        <div class="row">
+                            <div class="col-sm-12 col-md-10 col-lg-10 col-xl-4">
+                                <label id="lblCaptcha" accesskey="" class="infraLabelObrigatorio d-block" style="width: 140px">
+                                    <img id="imgCaptcha" src="/infra_js/infra_gerar_captcha.php?codetorandom=<?= $strCodigoParaGeracaoCaptcha; ?>" alt="Não foi possível carregar imagem de confirmação"/>
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                <? } ?>
-                <? if ($bolCaptcha) { ?>
-                    <div class="row">
-                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-4">
-                            <label id="lblCodigo" for="txtCaptcha" accesskey="" class="infraLabelOpcional">Digite o código: </label><br/>
-                            <input type="text" id="txtCaptcha" name="txtCaptcha" class="infraText form-control" maxlength="4" value=""/><br/>
+                        <div class="row">
+                            <div class="col-sm-12 col-md-10 col-lg-5 col-xl-4">
+                                <label id="lblCodigo" for="txtCaptcha" accesskey="" class="infraLabelOpcional">Digite o código: </label><br/>
+                                <input type="text" id="txtCaptcha" name="txtCaptcha" class="infraText form-control" maxlength="4" value="" style="width: 140px"/><br/>
+                            </div>
                         </div>
                     </div>
                 <? } ?>
                 <div class="row">
                     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 mt-4 mt-sm-4 mt-xl-0 mt-lg-0 mt-md-0">
-                        <? if ($bolCaptcha) { ?>
-                            <input type="submit" id="sbmPesquisar" name="sbmPesquisar" value="Pesquisar" class="infraButton"/>
-                            <input type="reset" id="sbmLimpar" name="sbmLimpar" value="Limpar" class="infraButton"/>
-                        <? } else { ?>
-                            <input type="submit" id="sbmPesquisar" name="sbmPesquisar" value="Pesquisar" class="infraButton"/>
-                            <input type="reset" id="sbmLimpar" name="sbmLimpar" value="Limpar" class="infraButton"/>
-                        <? } ?>
+                        <input type="submit" id="sbmPesquisar" name="sbmPesquisar" value="Pesquisar" class="infraButton"/>
+                        <input type="reset" id="sbmLimpar" name="sbmLimpar" value="Limpar" class="infraButton"/>
                     </div>
                 </div>
             </div>
@@ -648,7 +658,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
         <table border="0" class="pesquisaResultado">
             <tbody></tbody>
         </table>
-        <div class="ajax-loading" style="background: #F8F8F8; padding: 7px 10px 4px; text-align: center; display: none;">
+        <div class="ajax-loading" style="position: absolute; width: 97%; background: #F8F8F8; padding: 7px 10px 4px; text-align: center; display: none;">
             <div class="d-flex justify-content-center align-items-center">
                 <img src="../../../infra_css/svg/aguarde.svg" alt="" style="d-inline-block">
                 <span>Pesquisando...</span>
