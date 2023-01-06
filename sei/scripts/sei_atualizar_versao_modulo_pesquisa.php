@@ -147,19 +147,19 @@ class MdPesqAtualizadorSeiRN extends InfraRN
         $this->logar('INSERINDO DADOS NA TABELA md_pesq_parametro');
 
         $arrParametroPesquisaDTO = array(
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_CAPTCHA, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_CAPTCHA_PDF, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_PROCESSO_RESTRITO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_RESTRITO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO, 'Valor' => 'Processo ou Documento de Acesso Restrito - Para condições de acesso verifique a <a style="font-size: 1em;" href="http://[orgao]/link_condicao_acesso" target="_blank">Condição de Acesso</a> ou entre em contato pelo e-mail: sei@orgao.gov.br'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_PESQUISA_DOCUMENTO_PROCESSO_RESTRITO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_MENU_USUARIO_EXTERNO, 'Valor' => 'S'),
-            array('Nome' => MdPesqParametroPesquisaRN::$TA_CHAVE_CRIPTOGRAFIA, 'Valor' => null),
+            array('Nome' => 'CAPTCHA', 'Valor' => 'S'),
+            array('Nome' => 'CAPTCHA_PDF', 'Valor' => 'S'),
+            array('Nome' => 'LISTA_ANDAMENTO_PROCESSO_PUBLICO', 'Valor' => 'S'),
+            array('Nome' => 'PROCESSO_RESTRITO', 'Valor' => 'S'),
+            array('Nome' => 'METADADOS_PROCESSO_RESTRITO', 'Valor' => 'S'),
+            array('Nome' => 'LISTA_ANDAMENTO_PROCESSO_RESTRITO', 'Valor' => 'S'),
+            array('Nome' => 'DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO', 'Valor' => 'Processo ou Documento de Acesso Restrito - Para condições de acesso verifique a <a style="font-size: 1em;" href="http://[orgao]/link_condicao_acesso" target="_blank">Condição de Acesso</a> ou entre em contato pelo e-mail: sei@orgao.gov.br'),
+            array('Nome' => 'DOCUMENTO_PROCESSO_PUBLICO', 'Valor' => 'S'),
+            array('Nome' => 'LISTA_DOCUMENTO_PROCESSO_PUBLICO', 'Valor' => 'S'),
+            array('Nome' => 'LISTA_DOCUMENTO_PROCESSO_RESTRITO', 'Valor' => 'S'),
+            array('Nome' => 'AUTO_COMPLETAR_INTERESSADO', 'Valor' => 'S'),
+            array('Nome' => 'MENU_USUARIO_EXTERNO', 'Valor' => 'S'),
+            array('Nome' => 'CHAVE_CRIPTOGRAFIA', 'Valor' => 'ch@c3_cr1pt0gr@f1a'),
         );
 
         $arrObjParametroPesquisaDTO = InfraArray::gerarArrInfraDTOMultiAtributos('MdPesqParametroPesquisaDTO', $arrParametroPesquisaDTO);
@@ -213,15 +213,14 @@ class MdPesqAtualizadorSeiRN extends InfraRN
     {
 
         $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.1.0 DO ' . $this->nomeDesteModulo . ' NA BASE DO SEI');
-        $this->logar('INSERINDO PARAMETRO "DATA_CORTE" NA TABELA md_pesq_parametro');
 
+        $this->logar('INSERINDO PARAMETRO "DATA_CORTE" NA TABELA md_pesq_parametro');
         $MdPesqParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
         $MdPesqParametroPesquisaDTO->setStrNome('DATA_CORTE');
         $MdPesqParametroPesquisaDTO->setStrValor(null);
         $MdPesqParametroPesquisaDTO = (new MdPesqParametroPesquisaRN())->cadastrar($MdPesqParametroPesquisaDTO);
 
         $this->logar('REMOVENDO PARAMETRO "PROCESSO_RESTRITO" NA TABELA md_pesq_parametro');
-
         $mdPesqParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
         $mdPesqParametroPesquisaDTO->setStrNome('PROCESSO_RESTRITO');
         (new MdPesqParametroPesquisaBD(BancoSEI::getInstance()))->excluir($mdPesqParametroPesquisaDTO);
