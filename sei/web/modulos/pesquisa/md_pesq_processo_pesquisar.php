@@ -435,6 +435,14 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
             $('.total-registros-infinite').empty();
 
+            <? if($bolCaptcha): ?>
+            if($('input[name=txtCaptcha]').val().length != 4){
+                $('.retorno-ajax').append('<div class="sem-resultado"><p class="alert alert-warning">Informe o código de confirmação!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true" style="font-size: 20px; position: absolute; margin-top: -1px; margin-left: -6px; cursor: pointer">&times;</span></button></p></div>');
+                $('input[name=txtCaptcha]').focus();
+                return false;
+            }
+            <? endif; ?>
+
             $('.ajax-loading').show();
             $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio=0&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
                 if($(data).find('resultado').length > 0){
