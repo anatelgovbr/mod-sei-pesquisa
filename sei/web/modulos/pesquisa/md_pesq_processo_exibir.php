@@ -43,7 +43,9 @@ try {
 	}else {
 		$md5Captcha = null;
 	}
-
+	
+	$bolAcaoImprimir = true;
+	
 	PaginaSEIExterna::getInstance()->setTipoPagina(PaginaSEIExterna::$TIPO_PAGINA_SEM_MENU);
   
 	$strTitulo = 'Pesquisa Processual';
@@ -460,6 +462,12 @@ try {
 	}	
 
 	$arrComandos = array();
+	
+	if ($bolAcaoImprimir){
+      $bolCheck = true;
+      $arrComandos[] = '<button type="button" accesskey="I" id="btnImprimir" value="Imprimir" onclick="infraImprimirDiv(\'divInfraAreaTelaD\');" class="infraButton"><span class="infraTeclaAtalho">I</span>mprimir</button>';
+    }
+	
 	if ($numDocumentosPdf > 0){
 		if($bolCaptchaGerarPdf){
 			$strComando = '<button type="button" accesskey="G" name="btnGerarPdfModal" value="Gerar PDF" onclick="gerarPdfModal();" class="infraButton"><span class="infraTeclaAtalho">G</span>erar PDF</button>';
