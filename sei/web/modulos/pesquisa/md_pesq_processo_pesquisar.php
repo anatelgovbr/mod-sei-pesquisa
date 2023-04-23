@@ -32,6 +32,7 @@ try {
     $bolAutocompletarInterressado = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
     $strLinkAjaxPesquisar = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar');
     $strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload');
+    $strLinkAjaxCaptchaCode = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=get_captcha_code');
 
 
     MdPesqPesquisaUtil::valiadarLink();
@@ -123,6 +124,7 @@ try {
         case 'protocolo_pesquisa_rapida':
 
             $strTitulo = 'Pesquisa Pública';
+	        CaptchaSEI::getInstance()->configurarCaptcha('Pesquisa Pública');
 
             // Altero os caracteres 'Coringas' por aspas Duplas para não dar erro de Js no IE
             $strPalavrasPesquisa = str_replace("$*", '\"', PaginaSEIExterna::getInstance()->recuperarCampo('q'));
@@ -155,11 +157,9 @@ try {
 
             //Opção de Auto Completar Interressado
             if (!$bolAutocompletarInterressado) {
-
                 if (!InfraString::isBolVazia($strNomeParticipante)) {
                     $strParticipanteSolr = MdPesqPesquisaUtil::buscaParticipantes($strNomeParticipante);
                 }
-
             }
 
             $strDisplayAvancado = 'block';
@@ -197,12 +197,11 @@ try {
                 $objMdPesqParametroPesquisaDTO->retTodos();
                 $objMdPesqParametroPesquisaDTO = $mdPesqParametroPesquisaRN->consultar($objMdPesqParametroPesquisaDTO);
                 if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
-                    if (md5($_POST['txtCaptcha']) != $_POST['hdnCaptchaMd5'] && $_GET['hash'] != $_POST['hdnCaptchaMd5'] && $bolCaptcha == true) {
+                    if ($bolCaptcha == true && sha1(mb_strtoupper($_POST['txtInfraCaptcha'])) != $_POST['hdnCaptchaSha1']) {
                         PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
                     } else {
                         //preencheu palavra de busca ou alguma opção avançada
                         if (!InfraString::isBolVazia($q) || $bolPreencheuAvancado) {
-
                             try {
                                 $strResultado = MdPesqBuscaProtocoloExterno::executar($q, $strDescricaoPesquisa, $strObservacaoPesquisa, $inicio, 100, $strParticipanteSolr, $md5Captcha);
                             } catch (Exception $e) {
@@ -246,6 +245,7 @@ PaginaSEIExterna::getInstance()->abrirHead();
 PaginaSEIExterna::getInstance()->montarMeta();
 PaginaSEIExterna::getInstance()->montarTitle(':: ' . PaginaSEIExterna::getInstance()->getStrNomeSistema() . ' - ' . $strTitulo . ' ::');
 PaginaSEIExterna::getInstance()->montarStyle();
+CaptchaSEI::getInstance()->montarStyle();
 PaginaSEIExterna::getInstance()->abrirStyle();
 ?>
     .row{margin-top: 10px;}
@@ -260,6 +260,7 @@ PaginaSEIExterna::getInstance()->abrirStyle();
 <?php
 PaginaSEIExterna::getInstance()->fecharStyle();
 PaginaSEIExterna::getInstance()->montarJavaScript();
+CaptchaSEI::getInstance()->montarJavascript();
 PaginaSEIExterna::getInstance()->adicionarJavaScript('solr/js/sistema.js');
 PaginaSEIExterna::getInstance()->abrirJavaScript();
 ?>
@@ -436,11 +437,13 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             $('.total-registros-infinite').empty();
 
             <? if($bolCaptcha): ?>
-            if($('input[name=txtCaptcha]').val().length != 4){
-                $('.retorno-ajax').append('<div class="sem-resultado"><p class="alert alert-warning">Informe o código de confirmação!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true" style="font-size: 20px; position: absolute; margin-top: -1px; margin-left: -6px; cursor: pointer">&times;</span></button></p></div>');
-                $('input[name=txtCaptcha]').focus();
-                return false;
-            }
+                if (infraTrim(document.getElementById('txtInfraCaptcha').value) == '') {
+                    alert('Informe o código de confirmação.');
+                    document.getElementById('txtInfraCaptcha').focus();
+                    return false;
+                }else{
+                    document.getElementById('hdnInfraCaptcha').value='1';
+                }
             <? endif; ?>
 
             $('.ajax-loading').show();
@@ -456,7 +459,6 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
                 $('.ajax-loading').hide();
                 updateCaptcha();
             });
-
         });
 
         $('body').on('reset', '#seiSearch', function(e){
@@ -467,16 +469,8 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
         });
 
         function updateCaptcha(){
-            $('.capload').show();
-            $.post('<?= $strLinkAjaxCaptchaReload ?>').done(function(data){
-                if($(data).find('captcha').length > 0){
-                    $('img#imgCaptcha').attr('src', $(data).find('scrImgCaptcha').html());
-                    $('input#hdnCaptchaMd5').val($(data).find('md5Captcha').html());
-                    $('input#txtCaptcha').val('');
-                }
-            }).always(function() {
-                setTimeout(function(){$('.capload').hide()}, 350);
-            });
+            $('#infraImgRecarregarCaptcha').trigger('click');
+            $('#txtInfraCaptcha').val('');
         }
 
     });
@@ -615,24 +609,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                 </div>
             </div>
             <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
-                <? if ($bolCaptcha) { ?>
-                    <div class="captcha-loader">
-                        <div class="capload"><img src="../../../infra_css/svg/aguarde.svg" alt="" style="d-inline-block"></div>
-                        <div class="row">
-                            <div class="col-sm-12 col-md-10 col-lg-10 col-xl-4">
-                                <label id="lblCaptcha" accesskey="" class="infraLabelObrigatorio d-block" style="width: 140px">
-                                    <img id="imgCaptcha" src="/infra_js/infra_gerar_captcha.php?codetorandom=<?= $strCodigoParaGeracaoCaptcha; ?>" alt="Não foi possível carregar imagem de confirmação"/>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-12 col-md-10 col-lg-5 col-xl-4">
-                                <label id="lblCodigo" for="txtCaptcha" accesskey="" class="infraLabelOpcional">Digite o código: </label><br/>
-                                <input type="text" id="txtCaptcha" name="txtCaptcha" class="infraText form-control" maxlength="4" value="" style="width: 140px"/><br/>
-                            </div>
-                        </div>
-                    </div>
-                <? } ?>
+                <? if($bolCaptcha){ CaptchaSEI::getInstance()->montarHtml(PaginaSEIExterna::getInstance()->getProxTabDados()); } ?>
                 <div class="row">
                     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 mt-4 mt-sm-4 mt-xl-0 mt-lg-0 mt-md-0">
                         <input type="submit" id="sbmPesquisar" name="sbmPesquisar" value="Pesquisar" class="infraButton"/>
@@ -654,7 +631,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
         <input type="hidden" id="hdnSiglasUsuarios" name="hdnSiglasUsuarios" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strUsuarios) ?>"/>
         <input type="hidden" id="hdnSiglasUsuarios" name="hdnSiglasUsuarios" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strUsuarios) ?>"/>
         <? if ($bolCaptcha) { ?>
-            <input type="hidden" id="hdnCaptchaMd5" name="hdnCaptchaMd5" class="infraText" value="<?= md5(InfraCaptcha::gerar(PaginaSEIExterna::tratarHTML($strCodigoParaGeracaoCaptcha))); ?>"/>
+            <input type="hidden" id="hdnCaptchaSha1" name="hdnCaptchaSha1" class="infraText" value="<?= sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2'])); ?>"/>
         <? } ?>
         <input id="partialfields" name="partialfields" type="hidden" value=""/>
         <input id="requiredfields" name="requiredfields" type="hidden" value=""/>
@@ -674,20 +651,17 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
         </div>
         <div class="total-registros-infinite"></div>
     </div>
-        <?
-
-//        if ($strResultado != '') {
-//            echo '<div class="row">';
-//            echo '<div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">';
-//            echo '<div id="conteudo" style="width:99%;" class="infraAreaTabela">';
-//            echo $strResultado;
-//            echo '</div>';
-//            echo '</div>';
-//            echo '</div>';
-//        }
-
-        PaginaSEIExterna::getInstance()->montarAreaDebug();
-        ?>
+    <? PaginaSEIExterna::getInstance()->montarAreaDebug(); ?>
+    <script>
+        $('body').on('click', '#infraImgRecarregarCaptcha', function(){
+            console.log('here');
+            $.get('<?= $strLinkAjaxCaptchaCode ?>').done(function(data){
+                if($(data).find('captcha').length > 0){
+                    $('#hdnCaptchaSha1').val($(data).find('captcha').html());
+                }
+            });
+        });
+    </script>
 <?
 PaginaSEIExterna::getInstance()->fecharBody();
 PaginaSEIExterna::getInstance()->fecharHtml();

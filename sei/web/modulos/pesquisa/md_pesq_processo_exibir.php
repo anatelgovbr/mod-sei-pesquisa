@@ -18,6 +18,9 @@ try {
   	MdPesqConverteURI::converterURI();
    	MdPesqPesquisaUtil::valiadarLink();
 
+	CaptchaSEI::getInstance()->configurarCaptcha('Pesquisa Processual');
+	$strLinkAjaxCaptchaCode = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=get_captcha_code');
+
 	//carrega configuracoes pesquisa
 	$objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
 	$objParametroPesquisaDTO->retStrNome();
@@ -36,13 +39,6 @@ try {
 	$bolListaDocumentoProcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
 	$txtDescricaoProcessoAcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO];
 	$dtaCortePesquisa = (new MdPesqParametroPesquisaRN())->existeDataCortePesquisa();
-
-	if($bolCaptchaGerarPdf) {
-		$strCodigoParaGeracaoCaptcha = InfraCaptcha::obterCodigo();
-		$md5Captcha = md5(InfraCaptcha::gerar($strCodigoParaGeracaoCaptcha));
-	}else {
-		$md5Captcha = null;
-	}
 
 	PaginaSEIExterna::getInstance()->setTipoPagina(PaginaSEIExterna::$TIPO_PAGINA_SEM_MENU);
   
@@ -549,9 +545,8 @@ try {
   
   if ($_POST['hdnFlagGerar']=='1'){
 
-  		if(md5($_POST['txtCaptcha']) != $_POST['hdnCaptchaMd5'] && $_GET['hash'] !=  $_POST['hdnCaptchaMd5'] && $bolCaptchaGerarPdf == true){
+  		if(sha1(mb_strtoupper($_POST['txtInfraCaptcha'])) != $_POST['hdnCaptchaSha1'] && $bolCaptchaGerarPdf == true){
   			PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
-  		
   		}else {
 
 			$objDocumentoRN = new DocumentoRN();
@@ -619,6 +614,7 @@ PaginaSEIExterna::getInstance()->abrirHead();
 PaginaSEIExterna::getInstance()->montarMeta();
 PaginaSEIExterna::getInstance()->montarTitle(':: '.PaginaSEIExterna::getInstance()->getStrNomeSistema().' - '.$strTitulo.' ::');
 PaginaSEIExterna::getInstance()->montarStyle();
+CaptchaSEI::getInstance()->montarStyle();
 PaginaSEIExterna::getInstance()->abrirStyle();
 echo $strCssMostrarAcoes;
 ?>
@@ -698,6 +694,7 @@ span.retiraAncoraPadraoAzul{font-size: .875rem;}
 <?
 PaginaSEIExterna::getInstance()->fecharStyle();
 PaginaSEIExterna::getInstance()->montarJavaScript();
+CaptchaSEI::getInstance()->montarJavascript();
 PaginaSEIExterna::getInstance()->abrirJavaScript();
 ?>
 
@@ -736,9 +733,10 @@ function gerarPdfModal(){
     	alert('Nenhum documento selecionado.');
     	return;
   	}
-	var modal = document.getElementById('divInfraModal');
-	modal.style.display = "block";
-    document.getElementById('txtCaptcha').focus();
+
+    document.getElementById('divInfraModal').style.display = "block";
+    $('#infraImgRecarregarCaptcha').trigger('click');
+    document.getElementById('txtInfraCaptcha').focus();
 
 }
 
@@ -765,13 +763,13 @@ function gerarPdf() {
         return false;
     }
 
-    if (document.getElementById('txtCaptcha').value.length != 4){
+    if (document.getElementById('txtInfraCaptcha').value.length != 6){
         $('.modal-alert-msg').html('<p class="alert alert-warning">Informe o código de confirmação!</p>');
-        document.getElementById('txtCaptcha').focus();
+        document.getElementById('txtInfraCaptcha').focus();
         return false;
     }
 
-    if(document.getElementById('hdnInfraItensSelecionados').value != '' && document.getElementById('txtCaptcha').value.length == 4){
+    if(document.getElementById('hdnInfraItensSelecionados').value != '' && document.getElementById('txtInfraCaptcha').value.length == 6){
         <? if($bolCaptchaGerarPdf): ?>
             fecharPdfModal();
         <? endif; ?>
@@ -803,12 +801,14 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo,'onload="inicializar();"')
                 </div>
                 <div class="row">
                     <div class="col-12">
-                        <div class="d-flex justify-content-center">
-                            <div style="width: 137px">
-                                <img src="/infra_js/infra_gerar_captcha.php?codetorandom=<?= $strCodigoParaGeracaoCaptcha; ?>" alt="Não foi possível carregar imagem de confirmação" />
-                                <input type="text" id="txtCaptcha" name="txtCaptcha" class="infraText form-control text-center mb-2" maxlength="4" value="" style="width: 137px" />
-                                <button id="btnEnviarCaptcha" type="button" accesskey="G" name="btnEnviarCaptcha" value="Enviar" onclick="gerarPdf();" class="infraButton" style="width: 137px"><span class="infraTeclaAtalho">E</span>nviar</button>
+                        <div class="text-center">
+                            <div>
+	                            <? CaptchaSEI::getInstance()->montarHtml(PaginaSEIExterna::getInstance()->getProxTabDados())?><br>
+                                <input type="hidden" id="hdnCaptchaSha1" name="hdnCaptchaSha1" class="infraText" value="<?= sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2'])); ?>"/>
                             </div>
+                        </div>
+                        <div class="text-center">
+                            <button id="btnEnviarCaptcha" type="button" accesskey="G" name="btnEnviarCaptcha" value="Gerar PDF" onclick="gerarPdf();" class="infraButton" style="width: 137px"><span class="infraTeclaAtalho">G</span>erar PDF</button>
                         </div>
                     </div>
                 </div>
@@ -825,9 +825,6 @@ PaginaSEIExterna::getInstance()->montarAreaTabela($strResultado,$numProtocolos);
 echo $strResultadoAndamentos;
 ?>
 <input type="hidden" id="hdnFlagGerar" name="hdnFlagGerar" value="0" />
- <?if($bolCaptchaGerarPdf) { ?>
-    	<input type="hidden" id="hdnCaptchaMd5" name="hdnCaptchaMd5" class="infraText" value="<?=md5(InfraCaptcha::gerar($strCodigoParaGeracaoCaptcha));?>" />
-  	<?} ?>
 </form>
 <?
 PaginaSEIExterna::getInstance()->montarAreaDebug();
@@ -906,6 +903,19 @@ if($bolGeracaoOK){
 	</script>
 <?
 }
+?>
+<script>
+    $('body').on('click', '#infraImgRecarregarCaptcha', function(){
+        console.log('here2');
+        $.get('<?= $strLinkAjaxCaptchaCode ?>').done(function(data){
+            if($(data).find('captcha').length > 0){
+                $('#hdnCaptchaSha1').val($(data).find('captcha').html());
+            }
+        });
+    });
+</script>
+
+<?
 PaginaSEIExterna::getInstance()->fecharBody();
 PaginaSEIExterna::getInstance()->fecharHtml();
 ?>
