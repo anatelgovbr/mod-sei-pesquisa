@@ -250,18 +250,20 @@ class MdPesqBuscaProtocoloExterno{
             }
 
             // Protege contra a não idexação no solr quando o processo ou documento passa de público para restrito ou quando o documento possui intimações não cumpridas:
-            $isProcesso     = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
-            $isDocumento    = $objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO;
+	        if(!empty($objProtocoloDTO)){
+	            $isProcesso     = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
+	            $isDocumento    = $objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO;
+	            if(
+	                ( $isProcesso && $objProtocoloDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_SIGILOSO ) ||
+	                ( $isDocumento && !$isPublico && !is_null($pesquisaLivre) && ($pesquisaLivre != InfraSolrUtil::obterTag($registros[$i], 'prot_doc', 'str') || $pesquisaLivre == '\*') ) ||
+	                ( !$bolListaDocumentoProcessoPublico && ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_PUBLICO) ) ||
+	                ( !$bolListaDocumentoProcessoRestrito && ( ($isDocumento && !$isPublico) || ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) ) )
+	            ){
+	                $removidos++;
+	                continue;
+	            }
+	        }
 
-            if(
-                ( $isProcesso && $objProtocoloDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_SIGILOSO ) ||
-                ( $isDocumento && !$isPublico && !is_null($pesquisaLivre) && ($pesquisaLivre != InfraSolrUtil::obterTag($registros[$i], 'prot_doc', 'str') || $pesquisaLivre == '\*') ) ||
-                ( !$bolListaDocumentoProcessoPublico && ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_PUBLICO) ) ||
-                ( !$bolListaDocumentoProcessoRestrito && ( ($isDocumento && !$isPublico) || ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) ) )
-            ){
-                $removidos++;
-                continue;
-            }
 
             $arrMetatags = [];
             $strSiglaUnidadeGeradora = $strDescricaoUnidadeGeradora = "";
