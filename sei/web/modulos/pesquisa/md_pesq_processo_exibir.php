@@ -260,7 +260,7 @@ try {
    	$strResultado = '<table id="tblDocumentos" width="99.3%" class="infraTable" summary="Lista de Documentos" >
   					  									<caption class="infraCaption" >'.PaginaSEIExterna::getInstance()->gerarCaptionTabela("Protocolos",$numProtocolos).'</caption> 
   					 									<tr>
-                                                            <th class="infraTh" width="1%">'.$strThCheck.'</th>  					  									    
+                                                            <th class="infraTh no-print" width="1%">'.$strThCheck.'</th>  					  									    
   					  										<th class="infraTh" width="15%">Processo / Documento</th> 
                                                             <th class="infraTh" width="15%">Tipo</th>
                                                             <th class="infraTh" width="15%">Data</th>
@@ -301,15 +301,15 @@ try {
                     }
 
 				    if($dtaCortePesquisa && $dtaCortePesquisa > date('Y-m-d', strtotime(str_replace('/', '-', $dtaCorteDoc)))) {
-                        $strResultado .= '<td>&nbsp;</td>';
+                        $strResultado .= '<td class="no-print">&nbsp;</td>';
 				    }else{
-                        $strResultado .= '<td align="center">'.PaginaSEIExterna::getInstance()->getTrCheck($numDocumentosPdf++, $objDocumentoDTO->getDblIdDocumento(), $objDocumentoDTO->getStrNomeSerie()).'</td>';
+                        $strResultado .= '<td align="center" class="no-print">'.PaginaSEIExterna::getInstance()->getTrCheck($numDocumentosPdf++, $objDocumentoDTO->getDblIdDocumento(), $objDocumentoDTO->getStrNomeSerie()).'</td>';
                     }
 				}else{
-   					$strResultado .= '<td>&nbsp;</td>';
+   					$strResultado .= '<td class="no-print">&nbsp;</td>';
    				}
    			}else{
-   				$strResultado .= '<td>&nbsp;</td>';
+   				$strResultado .= '<td class="no-print">&nbsp;</td>';
    			}
    			
    			//Exibe link de documentos com nivel de acesso local Publico de processo publico
@@ -391,7 +391,7 @@ try {
    	
    			
    			$strResultado .= '<tr class="infraTrClara">';
-   			$strResultado .= '<td>&nbsp;</td>';
+   			$strResultado .= '<td class="no-print">&nbsp;</td>';
    			$strHipoteseLegalAnexo = '';
    			$strProtocoloRestrito = '';
    			
@@ -465,6 +465,10 @@ try {
 		
 		$arrComandos[] = $strComando;
 		
+	}
+
+	if ($bolAcaoImprimir = true){
+		$arrComandos[] = '<button type="button" accesskey="I" id="btnImprimir" value="Imprimir" onclick="infraImprimirDiv(\'divInfraAreaTelaD\');" class="infraButton"><span class="infraTeclaAtalho">I</span>mprimir</button>';
 	}
  	
  	//Carregar historico
@@ -618,6 +622,12 @@ CaptchaSEI::getInstance()->montarStyle();
 PaginaSEIExterna::getInstance()->abrirStyle();
 echo $strCssMostrarAcoes;
 ?>
+
+@media print {
+    .infraBarraComandos, .infraBarraComandos *, .no-print, .no-print * {
+        display: none !important;
+    }
+}
 
 div.infraBarraSistemaE {width:90%}
 div.infraBarraSistemaD {width:5%}
