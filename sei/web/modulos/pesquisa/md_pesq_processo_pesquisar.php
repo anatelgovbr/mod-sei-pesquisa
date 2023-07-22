@@ -19,6 +19,10 @@ try {
 // 	InfraDebug::getInstance()->setBolDebugInfra(false);
 // 	InfraDebug::getInstance()->limpar();
 
+	$strTitulo = 'Pesquisa Pública';
+	$identificadorFormatado = strtoupper(str_replace(" ", "_", InfraString::excluirAcentos($strTitulo.round(microtime(true)*1000))));
+	CaptchaSEI::getInstance()->configurarCaptcha($identificadorFormatado);
+
     $objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
     $objParametroPesquisaDTO->retStrNome();
     $objParametroPesquisaDTO->retStrValor();
@@ -31,8 +35,8 @@ try {
     $bolCaptcha = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA] == 'S' ? true : false;
     $bolAutocompletarInterressado = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
     $strLinkAjaxPesquisar = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar');
-    $strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload');
-    $strLinkAjaxCaptchaCode = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=get_captcha_code');
+    $strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload&i='.$identificadorFormatado);
+    $strLinkAjaxCaptchaCode = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=get_captcha_code&i='.$identificadorFormatado);
 
 
     MdPesqPesquisaUtil::valiadarLink();
@@ -122,9 +126,6 @@ try {
 
         case 'protocolo_pesquisar':
         case 'protocolo_pesquisa_rapida':
-
-            $strTitulo = 'Pesquisa Pública';
-	        CaptchaSEI::getInstance()->configurarCaptcha('Pesquisa Pública');
 
             // Altero os caracteres 'Coringas' por aspas Duplas para não dar erro de Js no IE
             $strPalavrasPesquisa = str_replace("$*", '\"', PaginaSEIExterna::getInstance()->recuperarCampo('q'));
@@ -392,6 +393,8 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
 
     $(document).ready(function(){
 
+        updateCaptcha();
+
         var paginar     = true;
         var formChanged = false;
         var buscaInicio = 0;
@@ -631,7 +634,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
         <input type="hidden" id="hdnSiglasUsuarios" name="hdnSiglasUsuarios" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strUsuarios) ?>"/>
         <input type="hidden" id="hdnSiglasUsuarios" name="hdnSiglasUsuarios" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strUsuarios) ?>"/>
         <? if ($bolCaptcha) { ?>
-            <input type="hidden" id="hdnCaptchaSha1" name="hdnCaptchaSha1" class="infraText" value="<?= sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2'])); ?>"/>
+            <input type="hidden" id="hdnCaptchaSha1" name="hdnCaptchaSha1" class="infraText" value="<?= sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$identificadorFormatado])); ?>"/>
         <? } ?>
         <input id="partialfields" name="partialfields" type="hidden" value=""/>
         <input id="requiredfields" name="requiredfields" type="hidden" value=""/>

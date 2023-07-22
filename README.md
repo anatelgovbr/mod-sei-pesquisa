@@ -3,11 +3,13 @@
 - Desde da v4.0.0 do módulo, que o adaptou para o SEI 4.0, a Anatel vem mantendo e evoluindo o SEI Pesquisa Pública.
 
 ## Requisitos
-- SEI 4.0.9 instalado/atualizado (Não é compatível com o SEI 3.1.x)
+- Requisito Mínimo é o SEI 4.0.11 instalado/atualizado - Não é compatível versões anteriores e versões mais recentes é necessário conferir antes se possui compatibilidade.
 	- Verificar valor da constante de versão no arquivo /sei/web/SEI.php ou, após logado no sistema, parando o mouse sobre a logo do SEI no canto superior esquerdo.
 - **Atenção**: nas máquinas que rodam o SEI deve instalar a biblioteca PHP "php-mcrypt".
 - Antes de executar os scripts de instalação/atualização, o usuário de acesso aos bancos de dados do SEI e do SIP, constante nos arquivos ConfiguracaoSEI.php e ConfiguracaoSip.php, deverá ter permissão de acesso total ao banco de dados, permitindo, por exemplo, criação e exclusão de tabelas.
 - Os códigos-fonte do Módulo podem ser baixados a partir do link a seguir, devendo sempre utilizar a versão mais recente: [https://github.com/anatelgovbr/mod-sei-pesquisa/releases](https://github.com/anatelgovbr/mod-sei-pesquisa/releases "Clique e acesse")
+- Se já tiver instalado a versão principal v4.1.0 com a execução dos scripts de banco do módulo no SEI e no SIP, então basta sobrescrever os códigos e não precisa executar os scripts de banco novamente.
+	- Atualizações apenas de código são identificadas com o incremento apenas do terceiro dígito da versão (p. ex. v4.1.1, v4.1.2) e não envolve execução de scripts de banco.
 
 ## Procedimentos para Instalação
 1. Fazer backup dos bancos de dados do SEI e do SIP.
@@ -49,3 +51,4 @@
 4. A partir da versão 4.1.0 do módulo de Pesquisa Pública foi criado o parâmetro "Data de Corte Opcional" na Administração do módulo. Leia o texto no ícone de ajuda sobre o citado campo.
 	- Caso seja inserida uma Data de Corte, o módulo protege a pesquisa dentro do conteúdo e o acesso aos documentos com nível de acesso Público que tenham data de inclusão (no caso de Documento Externo ou Automático) ou data da primeira assinatura (no caso de Documento Gerado ou Formulário) anterior à data de corte informada.
 	- Nesse cenário, no acesso ao processo, ao lado do protocolo do documento constará o ícone de uma chave azul indicando a situação de restrição provisória em razão de necessidade de reclassificação de nível de acesso.
+5. A partir da versão 4.1.2 do módulo de Pesquisa Pública foi ajustada a verificação da versão mínima requerida do InfraPHP do core do SEI que está na versão 2.0.6 e correções sobre o correto funcionamento do novo captcha com acessibilidade para permitir seu correto funcionamento em várias telas abertas ao mesmo tempo.

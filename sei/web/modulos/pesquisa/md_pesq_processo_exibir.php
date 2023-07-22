@@ -18,8 +18,13 @@ try {
   	MdPesqConverteURI::converterURI();
    	MdPesqPesquisaUtil::valiadarLink();
 
-	CaptchaSEI::getInstance()->configurarCaptcha('Pesquisa Processual');
-	$strLinkAjaxCaptchaCode = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=get_captcha_code');
+	$strTitulo = 'Pesquisa Processual';
+	$identificadorFormatado = strtoupper(str_replace(" ", "_", InfraString::excluirAcentos($strTitulo.round(microtime(true)*1000))));
+
+	CaptchaSEI::getInstance()->configurarCaptcha($identificadorFormatado);
+
+	$strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload&i='.$identificadorFormatado);
+	$strLinkAjaxCaptchaCode = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=get_captcha_code&i='.$identificadorFormatado);
 
 	//carrega configuracoes pesquisa
 	$objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
@@ -41,8 +46,6 @@ try {
 	$dtaCortePesquisa = (new MdPesqParametroPesquisaRN())->existeDataCortePesquisa();
 
 	PaginaSEIExterna::getInstance()->setTipoPagina(PaginaSEIExterna::$TIPO_PAGINA_SEM_MENU);
-  
-	$strTitulo = 'Pesquisa Processual';
 
     $dblIdProcedimento = $_GET['id_procedimento'];
      
@@ -814,7 +817,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo,'onload="inicializar();"')
                         <div class="text-center">
                             <div>
 	                            <? CaptchaSEI::getInstance()->montarHtml(PaginaSEIExterna::getInstance()->getProxTabDados())?><br>
-                                <input type="hidden" id="hdnCaptchaSha1" name="hdnCaptchaSha1" class="infraText" value="<?= sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2'])); ?>"/>
+                                <input type="hidden" id="hdnCaptchaSha1" name="hdnCaptchaSha1" class="infraText" value="<?= sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$identificadorFormatado])); ?>"/>
                             </div>
                         </div>
                         <div class="text-center">
