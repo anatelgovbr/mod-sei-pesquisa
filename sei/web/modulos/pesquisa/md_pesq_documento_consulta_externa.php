@@ -52,15 +52,15 @@ try {
 	$objDocumentoRN = new DocumentoRN();
 	$objDocumentoDTO = $objDocumentoRN->consultarRN0005($objDocumentoDTO);
 
+	if($objDocumentoDTO == null){
+		die('Documento não encontrado.');
+	}
+
 	$isLocalPublico = $objDocumentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO;
 	$isGlobalPublico = $objDocumentoDTO->getStrStaNivelAcessoGlobalProtocolo() == ProtocoloRN::$NA_PUBLICO;
 
-	if ($objDocumentoDTO == null || (!$isGlobalPublico && !$bolLinkMetadadosProcessoRestrito)){
-	 die('Documento não encontrado.');
-	}
-
-	if(!$bolListaDocumentoProcessoPublico && $isLocalPublico){
-	 die('Documento não encontrado');
+	if ((!$isGlobalPublico && !$bolLinkMetadadosProcessoRestrito) || (!$bolListaDocumentoProcessoPublico && $isLocalPublico)){
+		die('Documento não encontrado.');
 	}
 
     $dtaCorteDoc = $objDocumentoDTO->getDtaInclusaoProtocolo();

@@ -149,13 +149,13 @@ try{
             if ($arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA] == 'S') {
                 $strCodigoParaGeracaoCaptcha = InfraCaptcha::obterCodigo();
                 $md5Captcha = md5(InfraCaptcha::gerar($strCodigoParaGeracaoCaptcha));
-                $srcImgCaptcha = '/infra_js/infra_gerar_captcha.php?codetorandom='.$strCodigoParaGeracaoCaptcha;
+                $srcImgCaptcha = '/infra_js/infra_gerar_captcha.php?codetorandom='.$strCodigoParaGeracaoCaptcha.'&i='.$_GET['i'];
                 $xml = '<captcha><scrImgCaptcha>'.$srcImgCaptcha.'</scrImgCaptcha><md5Captcha>'.$md5Captcha.'</md5Captcha></captcha>';
             }
             break;
 
 		case 'get_captcha_code':
-			$xml = '<captcha>'.sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2'])).'</captcha>';
+			$xml = '<captcha>'.sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_GET['i']])).'</captcha>';
 			break;
 		
 		default:
