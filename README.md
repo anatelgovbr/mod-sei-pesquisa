@@ -3,7 +3,7 @@
 - Desde da v4.0.0 do módulo, que o adaptou para o SEI 4.0, a Anatel vem mantendo e evoluindo o SEI Pesquisa Pública.
 
 ## Requisitos
-- Requisito Mínimo é o SEI 4.0.11 instalado/atualizado - Não é compatível versões anteriores e versões mais recentes é necessário conferir antes se possui compatibilidade.
+- Requisito Mínimo é o SEI 4.0.11 instalado/atualizado - Não é compatível com versões anteriores e em versões mais recentes é necessário conferir antes se possui compatibilidade.
 	- Verificar valor da constante de versão no arquivo /sei/web/SEI.php ou, após logado no sistema, parando o mouse sobre a logo do SEI no canto superior esquerdo.
 - **Atenção**: nas máquinas que rodam o SEI deve instalar a biblioteca PHP "php-mcrypt".
 - Antes de executar os scripts de instalação/atualização, o usuário de acesso aos bancos de dados do SEI e do SIP, constante nos arquivos ConfiguracaoSEI.php e ConfiguracaoSip.php, deverá ter permissão de acesso total ao banco de dados, permitindo, por exemplo, criação e exclusão de tabelas.
