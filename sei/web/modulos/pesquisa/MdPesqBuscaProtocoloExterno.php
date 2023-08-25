@@ -311,8 +311,10 @@ class MdPesqBuscaProtocoloExterno{
                 $snippetTemp = utf8_decode($temp[$j]);
                 $snippetTemp = preg_replace('#<style(.*?)</style>.*?<script(.*?)</script>#is', '', $snippetTemp);
                 $snippetTemp = strtoupper(trim(strip_tags($snippetTemp))) == "NULL" ? null : $snippetTemp;
+                $snippetTemp = preg_replace("/\s+/", " ", $snippetTemp); // Espacos duplos
                 $snippetTemp = preg_replace("/<br>/i", "<br />", $snippetTemp);
                 $snippetTemp = preg_replace("/&lt;.*?&gt;/", "", $snippetTemp);
+                $snippetTemp = preg_replace('/<[^>]+>/', '', $snippetTemp);
                 $snippet .= $snippetTemp . '<b>...</b>';
             }
 

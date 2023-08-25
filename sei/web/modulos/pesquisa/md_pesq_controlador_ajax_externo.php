@@ -121,8 +121,8 @@ try{
             $objMdPesqParametroPesquisaDTO = (new MdPesqParametroPesquisaRN())->consultar($objMdPesqParametroPesquisaDTO);
 
             if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
-                if (($bolCaptcha == true && sha1(mb_strtoupper($_POST['txtInfraCaptcha'])) != $_POST['hdnCaptchaSha1']) && $_GET['isPaginacao'] == 'false') {
-                    $xml = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">Código de confirmação inválido.</p></div></consultavazia>';
+                if ($bolCaptcha == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']]) && $_GET['isPaginacao'] == 'false') {
+                    $xml = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">Código de confirmação inválido 1.</p></div></consultavazia>';
                 } else {
                     if (!InfraString::isBolVazia($q) || $bolPreencheuAvancado) {
                         try {
@@ -153,10 +153,6 @@ try{
                 $xml = '<captcha><scrImgCaptcha>'.$srcImgCaptcha.'</scrImgCaptcha><md5Captcha>'.$md5Captcha.'</md5Captcha></captcha>';
             }
             break;
-
-		case 'get_captcha_code':
-			$xml = '<captcha>'.sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_GET['i']])).'</captcha>';
-			break;
 		
 		default:
 			throw new InfraException("Ação '".$_GET['acao_ajax_externo']."' não reconhecida pelo controlador AJAX externo.");

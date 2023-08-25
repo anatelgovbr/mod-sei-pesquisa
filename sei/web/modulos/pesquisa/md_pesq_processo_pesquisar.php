@@ -36,7 +36,6 @@ try {
     $bolAutocompletarInterressado = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
     $strLinkAjaxPesquisar = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar');
     $strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload&i='.$identificadorFormatado);
-    $strLinkAjaxCaptchaCode = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=get_captcha_code&i='.$identificadorFormatado);
 
 
     MdPesqPesquisaUtil::valiadarLink();
@@ -198,7 +197,7 @@ try {
                 $objMdPesqParametroPesquisaDTO->retTodos();
                 $objMdPesqParametroPesquisaDTO = $mdPesqParametroPesquisaRN->consultar($objMdPesqParametroPesquisaDTO);
                 if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
-                    if ($bolCaptcha == true && sha1(mb_strtoupper($_POST['txtInfraCaptcha'])) != $_POST['hdnCaptchaSha1']) {
+                    if ($bolCaptcha == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']])) {
                         PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
                     } else {
                         //preencheu palavra de busca ou alguma opção avançada
@@ -422,10 +421,10 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
                         if($(data).find('consultavazia').length > 0){
                             $('.total-registros-infinite').html('A pesquisa encontrou '+$('.retorno-ajax > table tbody tr.pesquisaTituloRegistro').length+' resultado(s).');
                             paginar = false;
-                            updateCaptcha();
                         }
                     }).always(function() {
                         $('.ajax-loading').hide();
+                        updateCaptcha();
                     });
                 }
             }, 500);
@@ -634,7 +633,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
         <input type="hidden" id="hdnSiglasUsuarios" name="hdnSiglasUsuarios" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strUsuarios) ?>"/>
         <input type="hidden" id="hdnSiglasUsuarios" name="hdnSiglasUsuarios" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strUsuarios) ?>"/>
         <? if ($bolCaptcha) { ?>
-            <input type="hidden" id="hdnCaptchaSha1" name="hdnCaptchaSha1" class="infraText" value="<?= sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$identificadorFormatado])); ?>"/>
+            <input type="hidden" id="hdnCId" name="hdnCId" class="infraText" value="<?= $identificadorFormatado; ?>"/>
         <? } ?>
         <input id="partialfields" name="partialfields" type="hidden" value=""/>
         <input id="requiredfields" name="requiredfields" type="hidden" value=""/>
@@ -655,16 +654,6 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
         <div class="total-registros-infinite"></div>
     </div>
     <? PaginaSEIExterna::getInstance()->montarAreaDebug(); ?>
-    <script>
-        $('body').on('click', '#infraImgRecarregarCaptcha', function(){
-            console.log('here');
-            $.get('<?= $strLinkAjaxCaptchaCode ?>').done(function(data){
-                if($(data).find('captcha').length > 0){
-                    $('#hdnCaptchaSha1').val($(data).find('captcha').html());
-                }
-            });
-        });
-    </script>
 <?
 PaginaSEIExterna::getInstance()->fecharBody();
 PaginaSEIExterna::getInstance()->fecharHtml();
