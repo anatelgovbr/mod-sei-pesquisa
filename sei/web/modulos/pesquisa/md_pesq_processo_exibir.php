@@ -9,6 +9,8 @@
 try {
 	require_once dirname(__FILE__).'/../../SEI.php';
 
+    session_start();
+
 	SessaoSEIExterna::getInstance()->validarSessao();
  
 //	InfraDebug::getInstance()->setBolLigado(false);
@@ -17,14 +19,6 @@ try {
 
   	MdPesqConverteURI::converterURI();
    	MdPesqPesquisaUtil::valiadarLink();
-
-	$strTitulo = 'Pesquisa Processual';
-	$identificadorFormatado = strtoupper(str_replace(" ", "_", InfraString::excluirAcentos($strTitulo.round(microtime(true)*1000))));
-
-	CaptchaSEI::getInstance()->configurarCaptcha($identificadorFormatado);
-
-	$strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload&i='.$identificadorFormatado);
-	$strLinkAjaxCaptchaCode = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=get_captcha_code&i='.$identificadorFormatado);
 
 	//carrega configuracoes pesquisa
 	$objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
@@ -277,7 +271,7 @@ try {
    		if($objProtocoloPesquisaPublicaDTO->getStrStaAssociacao() == RelProtocoloProtocoloRN::$TA_DOCUMENTO_ASSOCIADO){
    	
    			$objDocumentoDTO = $objProtocoloPesquisaPublicaDTO->getObjDocumentoDTO();
-   			$urlCripografadaDocumeto = MdPesqCriptografia::criptografa('acao_externa=documento_exibir&id_documento='.$objDocumentoDTO->getDblIdDocumento().'&id_orgao_acesso_externo=0');
+   			$urlCripografadaDocumeto = MdPesqCriptografia::criptografa('acao_externa=documento_exibir&id_documento='.$objDocumentoDTO->getDblIdDocumento().'&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']);
    			$strLinkDocumento = PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink('md_pesq_documento_consulta_externa.php?'.$urlCripografadaDocumeto));
 
 			//Protege acesso à documento público de intimação eletrônica
@@ -431,7 +425,7 @@ try {
    			}
    			
    			if($objProcedimentoDTOAnexado->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO && $objProcedimentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO ){
-   				$parametrosCriptografadosProcesso = MdPesqCriptografia::criptografa('id_orgao_acesso_externo=0&id_procedimento='.$objProcedimentoDTOAnexado->getDblIdProcedimento());
+   				$parametrosCriptografadosProcesso = MdPesqCriptografia::criptografa('id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo'].'&id_procedimento='.$objProcedimentoDTOAnexado->getDblIdProcedimento());
    				$urlPesquisaProcesso = 'md_pesq_processo_exibir.php?'.$parametrosCriptografadosProcesso;
    				
    				// $strLinkProcessoAnexado = PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('processo_acesso_externo_consulta.php?id_acesso_externo='.$_GET['id_acesso_externo'].'&id_acesso_externo_assinatura='.$_GET['id_acesso_externo_assinatura'].'&id_procedimento_anexado='.$objProcedimentoDTOAnexado->getDblIdProcedimento()));
@@ -552,9 +546,11 @@ try {
   
   if ($_POST['hdnFlagGerar']=='1'){
 
-  		if(sha1(mb_strtoupper($_POST['txtInfraCaptcha'])) != $_POST['hdnCaptchaSha1'] && $bolCaptchaGerarPdf == true){
+        if ($bolCaptchaGerarPdf == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']])) {
+
   			PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
-  		}else {
+
+        }else {
 
 			$objDocumentoRN = new DocumentoRN();
 
@@ -612,7 +608,11 @@ try {
   
 }catch(Exception $e){
   PaginaSEIExterna::getInstance()->processarExcecao($e);
-} 
+}
+
+$strTitulo = 'Pesquisa Processual';
+$identificadorFormatado = strtoupper(str_replace(" ", "_", InfraString::excluirAcentos($strTitulo.round(microtime(true)*1000))));
+CaptchaSEI::getInstance()->configurarCaptcha($identificadorFormatado);
  
 
 PaginaSEIExterna::getInstance()->montarDocType();
@@ -715,7 +715,7 @@ function inicializar(){
 
   <?if ($bolGeracaoOK){?>
     
-  	window.open('<?=SessaoSEI::getInstance()->assinarLink('md_pesq_processo_exibe_arquivo.php?'.MdPesqCriptografia::criptografa('acao_externa=usuario_externo_exibir_arquivo&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo=0&nome_arquivo='.$objAnexoDTO->getStrNome().'&nome_download=SEI-'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().'.pdf'));?>');
+  	window.open('<?=SessaoSEI::getInstance()->assinarLink('md_pesq_processo_exibe_arquivo.php?'.MdPesqCriptografia::criptografa('acao_externa=usuario_externo_exibir_arquivo&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo'].'&nome_arquivo='.$objAnexoDTO->getStrNome().'&nome_download=SEI-'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().'.pdf'));?>');
   	
   <?}?>
 
@@ -748,7 +748,6 @@ function gerarPdfModal(){
   	}
 
     document.getElementById('divInfraModal').style.display = "block";
-    $('#infraImgRecarregarCaptcha').trigger('click');
     document.getElementById('txtInfraCaptcha').focus();
 
 }
@@ -776,6 +775,8 @@ function gerarPdf() {
         return false;
     }
 
+<? if($bolCaptchaGerarPdf): ?>
+
     if (document.getElementById('txtInfraCaptcha').value.length != 6){
         $('.modal-alert-msg').html('<p class="alert alert-warning">Informe o código de confirmação!</p>');
         document.getElementById('txtInfraCaptcha').focus();
@@ -783,13 +784,17 @@ function gerarPdf() {
     }
 
     if(document.getElementById('hdnInfraItensSelecionados').value != '' && document.getElementById('txtInfraCaptcha').value.length == 6){
-        <? if($bolCaptchaGerarPdf): ?>
-            fecharPdfModal();
-        <? endif; ?>
+        fecharPdfModal();
         infraExibirAviso(false);
         document.getElementById('hdnFlagGerar').value = '1';
         document.getElementById('frmProcessoAcessoExternoConsulta').submit();
     }
+<? else: ?>
+
+    document.getElementById('hdnFlagGerar').value = '1';
+    document.getElementById('frmProcessoAcessoExternoConsulta').submit();
+
+<? endif; ?>
 }
 
 <?
@@ -817,7 +822,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo,'onload="inicializar();"')
                         <div class="text-center">
                             <div>
 	                            <? CaptchaSEI::getInstance()->montarHtml(PaginaSEIExterna::getInstance()->getProxTabDados())?><br>
-                                <input type="hidden" id="hdnCaptchaSha1" name="hdnCaptchaSha1" class="infraText" value="<?= sha1(mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$identificadorFormatado])); ?>"/>
+                                <input type="hidden" id="hdnCId" name="hdnCId" class="infraText" value="<?= $identificadorFormatado; ?>"/>
                             </div>
                         </div>
                         <div class="text-center">
@@ -847,7 +852,7 @@ if($bolGeracaoOK){
 	<script>
 	if (navigator.userAgent.match(/msie/i) || navigator.userAgent.match(/trident/i) ){
 	
-		window.open('<?=SessaoSEI::getInstance()->assinarLink('md_pesq_processo_exibe_arquivo.php?'.MdPesqCriptografia::criptografa('acao_externa=usuario_externo_exibir_arquivo&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo=0&nome_arquivo='.$objAnexoDTO->getStrNome().'&nome_download=SEI-'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().'.pdf'));?>');     
+		window.open('<?=SessaoSEI::getInstance()->assinarLink('md_pesq_processo_exibe_arquivo.php?'.MdPesqCriptografia::criptografa('acao_externa=usuario_externo_exibir_arquivo&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo'].'&nome_arquivo='.$objAnexoDTO->getStrNome().'&nome_download=SEI-'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().'.pdf'));?>');
 			<?
 					if($bolCaptchaGerarPdf){ 
 					?>
@@ -917,16 +922,6 @@ if($bolGeracaoOK){
 <?
 }
 ?>
-<script>
-    $('body').on('click', '#infraImgRecarregarCaptcha', function(){
-        console.log('here2');
-        $.get('<?= $strLinkAjaxCaptchaCode ?>').done(function(data){
-            if($(data).find('captcha').length > 0){
-                $('#hdnCaptchaSha1').val($(data).find('captcha').html());
-            }
-        });
-    });
-</script>
 
 <?
 PaginaSEIExterna::getInstance()->fecharBody();

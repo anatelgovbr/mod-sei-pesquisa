@@ -11,6 +11,7 @@
 try {
     require_once dirname(__FILE__) . '/../../SEI.php';
 	require_once("MdPesqBuscaProtocoloExterno.php");
+	require_once("MdPesqPesquisaUtil.php");
     require_once("MdPesqConverteURI.php");
 
     SessaoSEIExterna::getInstance()->validarSessao();
@@ -26,28 +27,51 @@ try {
     $objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
     $objParametroPesquisaDTO->retStrNome();
     $objParametroPesquisaDTO->retStrValor();
-
-    $objParametroPesquisaRN = new MdPesqParametroPesquisaRN();
-    $arrObjParametroPesquisaDTO = $objParametroPesquisaRN->listar($objParametroPesquisaDTO);
+    $arrObjParametroPesquisaDTO = (new MdPesqParametroPesquisaRN())->listar($objParametroPesquisaDTO);
 
     $arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO($arrObjParametroPesquisaDTO, 'Valor', 'Nome');
+
+    // Montagem do multiple select de orgaos
+    $objOrgaoDTO = new OrgaoDTO();
+    $objOrgaoDTO->retNumIdOrgao();
+    $objOrgaoDTO->retStrSigla();
+    $objOrgaoDTO->retStrDescricao();
+    $objOrgaoDTO->setOrdStrSigla(InfraDTO::$TIPO_ORDENACAO_ASC);
+    $arrObjOrgaoDTO = (new OrgaoRN())->listarRN1353($objOrgaoDTO);
+
+    $numOrgaos = count($arrObjOrgaoDTO);
+
+    $strOptionsOrgaos = '';
+    foreach($arrObjOrgaoDTO as $objOrgaoDTO){
+        $strOptionsOrgaos .= '<option value="'.$objOrgaoDTO->getNumIdOrgao().'"';
+        if (isset($_POST['selOrgaoPesquisa'])){
+            if (in_array($objOrgaoDTO->getNumIdOrgao(), $arrNumIdOrgao)) {
+                $strOptionsOrgaos .= ' selected="selected"';
+            }
+        }else{
+            $strOptionsOrgaos .= ' selected="selected"';
+        }
+        $strOptionsOrgaos .= '>'.PaginaPublicacoes::tratarHTML($objOrgaoDTO->getStrSigla()).'</option>'."\n";
+    }
+    // Final da montagem do multiple select de orgaos
 
     $bolCaptcha = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA] == 'S' ? true : false;
     $bolAutocompletarInterressado = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
     $strLinkAjaxPesquisar = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar');
-    $strLinkAjaxCaptchaReload = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=protocolo_pesquisar_captcha_reload&i='.$identificadorFormatado);
 
 
     MdPesqPesquisaUtil::valiadarLink();
 
     PaginaSEIExterna::getInstance()->setBolXHTML(false);
 
+    $md5Captcha = null;
+
     if ($bolCaptcha) {
-        $strCodigoParaGeracaoCaptcha = InfraCaptcha::obterCodigo();
-        $md5Captcha = md5(InfraCaptcha::gerar($strCodigoParaGeracaoCaptcha));
-    } else {
-        $md5Captcha = null;
+        $md5Captcha = md5(InfraCaptcha::gerar(InfraCaptcha::obterCodigo()));
     }
+
+    $arrNumIdOrgao = [];
+
     if (isset($_POST['hdnFlagPesquisa']) || isset($_POST['sbmLimpar'])) {
 
         if (isset($_POST['sbmLimpar'])) {
@@ -57,6 +81,16 @@ try {
             PaginaSEIExterna::getInstance()->salvarCampo('chkSinProcessos', 'P');
 
         } else {
+
+            if(isset($_POST['selOrgaoPesquisa'])){
+                $arrNumIdOrgao = $_POST['selOrgaoPesquisa'];
+                if (!is_array($arrNumIdOrgao)){
+                    $arrNumIdOrgao = [$arrNumIdOrgao];
+                }
+            }
+
+            PaginaSEIExterna::getInstance()->salvarCampo('selOrgaoPesquisa', implode(',',$arrNumIdOrgao));
+            PaginaSEI::getInstance()->salvarCampo('chkSinRestringirOrgao', $_POST['chkSinRestringirOrgao']);
 
             PaginaSEIExterna::getInstance()->salvarCampo('chkSinProcessos', $_POST['chkSinProcessos']);
             PaginaSEIExterna::getInstance()->salvarCampo('chkSinDocumentosGerados', $_POST['chkSinDocumentosGerados']);
@@ -93,6 +127,7 @@ try {
     } else {
 
         PaginaSEIExterna::getInstance()->salvarCampo('q', '');
+        PaginaSEIExterna::getInstance()->salvarCampo('selOrgaoPesquisa', '');
         PaginaSEIExterna::getInstance()->salvarCampo('txtProtocoloPesquisa', $strProtocoloFormatadoLimpo);
         PaginaSEIExterna::getInstance()->salvarCampo('chkSinProcessos', 'P');
         PaginaSEIExterna::getInstance()->salvarCampo('chkSinDocumentosGerados', '');
@@ -153,6 +188,14 @@ try {
             $strSiglaUsuario3 = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario3');
             $strSiglaUsuario4 = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario4');
             $strUsuarios = PaginaSEIExterna::getInstance()->recuperarCampo('hdnSiglasUsuarios');
+
+            $arrNumIdOrgaosSelecionados = [];
+            if (PaginaSEI::getInstance()->recuperarCampo('selOrgaoPesquisa') != '') {
+                $arrNumIdOrgaosSelecionados = explode(',', PaginaSEI::getInstance()->recuperarCampo('selOrgaoPesquisa'));
+            }
+
+            $strSinRestringirOrgao = PaginaSEI::getInstance()->recuperarCampo('chkSinRestringirOrgao');
+
             $strParticipanteSolr = '';
 
             //Opção de Auto Completar Interressado
@@ -225,10 +268,10 @@ try {
     $strItensSelTipoProcedimento = TipoProcedimentoINT::montarSelectNome('null', '&nbsp;', $numIdTipoProcedimento);
     $strItensSelSerie = SerieINT::montarSelectNomeRI0802('null', '&nbsp;', $numIdSerie);
 
-    $strLinkAjaxContatos = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=contato_auto_completar_contexto_pesquisa&id_orgao_acesso_externo=0');
-    $strLinkAjaxUnidade = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=unidade_auto_completar_todas&id_orgao_acesso_externo=0');
+    $strLinkAjaxContatos = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=contato_auto_completar_contexto_pesquisa&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']);
+    $strLinkAjaxUnidade = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=unidade_auto_completar_todas&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']);
 
-    $strLinkAjuda = PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('md_pesq_ajuda_exibir_externo.php?acao_externa=pesquisa_publica_ajuda&id_orgao_acesso_externo=0'));
+    $strLinkAjuda = PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('md_pesq_ajuda_exibir_externo.php?acao_externa=pesquisa_publica_ajuda&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']));
 
     if ($strStaData == '0') {
         $strDisplayPeriodoExplicito = $strDisplayAvancado;
@@ -296,15 +339,18 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
     //Unidades
     objAutoCompletarUnidade = new infraAjaxAutoCompletar('hdnIdUnidade','txtUnidade','<?= $strLinkAjaxUnidade ?>');
 
-
     objAutoCompletarUnidade.limparCampo = true;
     objAutoCompletarUnidade.prepararExecucao = function(){
-    return 'palavras_pesquisa='+document.getElementById('txtUnidade').value;
+        var orgaosSelecionados = obterOrgaosSelecionados();
+        if(orgaosSelecionados == null){
+            return 'palavras_pesquisa='+document.getElementById('txtUnidade').value;
+        }else{
+            return 'palavras_pesquisa='+document.getElementById('txtUnidade').value+'&id_orgao='+obterOrgaosSelecionados();
+        }
     };
     objAutoCompletarUnidade.selecionar('<?= $strIdUnidade; ?>','<?= PaginaSEIExterna::getInstance()->formatarParametrosJavascript($strDescricaoUnidade) ?>');
 
     document.getElementById('txtProtocoloPesquisa').focus();
-
 
     //remover a string null dos combos
     document.getElementById('selTipoProcedimentoPesquisa').options[0].value='';
@@ -377,19 +423,6 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
     }
     }
 
-
-    function onSubmitForm(e){
-
-        if (!document.getElementById('chkSinProcessos').checked && !document.getElementById('chkSinDocumentosGerados').checked && !document.getElementById('chkSinDocumentosRecebidos').checked){
-            alert('Selecione pelo menos uma das opções de pesquisa avançada: Processos, Documentos Gerados ou Documento Recebidos');
-            return false;
-        }
-
-        limpaFields();
-        partialFields();
-
-    }
-
     $(document).ready(function(){
 
         updateCaptcha();
@@ -432,6 +465,17 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
 
         $('body').on('submit', '#seiSearch', function(e){
             e.preventDefault(); e.stopPropagation();
+
+            if (!document.getElementById('chkSinProcessos').checked && !document.getElementById('chkSinDocumentosGerados').checked && !document.getElementById('chkSinDocumentosRecebidos').checked){
+                alert('Selecione pelo menos uma das opções de pesquisa avançada: Processos, Documentos Gerados ou Documento Recebidos');
+                return false;
+            }
+
+            if ($("#selOrgaoPesquisa").length > 0 && $("#selOrgaoPesquisa").multipleSelect("getSelects").length == 0) {
+                alert('Nenhum Órgão Gerador selecionado.');
+                return false;
+            }
+
             $('input[name=partialfields]').val('');
             partialFields();
 
@@ -500,6 +544,34 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
     infraProcessarResize();
     }
 
+    $( document ).ready(function() {
+        $("#selOrgaoPesquisa").multipleSelect({
+            filter: false,
+            minimumCountSelected: 1,
+            selectAll: true
+        });
+        tratarSelecaoOrgao();
+    });
+
+    function restringirOrgao(){
+        if (document.getElementById('chkSinRestringirOrgao').checked){
+            $("#selOrgaoPesquisa").multipleSelect('uncheckAll');
+            document.getElementById('chkSinRestringirOrgao').checked = true;
+            $("#selOrgaoPesquisa").multipleSelect('check', <?=SessaoSEI::getInstance()->getNumIdOrgaoUnidadeAtual()?>);
+        }
+    }
+
+    function obterOrgaosSelecionados() {
+        if ($("#selOrgaoPesquisa").length === 0) {
+            return null;
+        }
+        return $("#selOrgaoPesquisa").multipleSelect("getSelects");
+    }
+
+    function tratarSelecaoOrgao(){
+        $('#txtUnidade, #hdnIdUnidade').val('');
+    }
+
 <?
 PaginaSEIExterna::getInstance()->fecharJavaScript();
 PaginaSEIExterna::getInstance()->fecharHead();
@@ -558,6 +630,20 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
 						<input type="hidden" id="hdnIdParticipante" name="hdnIdParticipante" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strIdParticipante) ?>"/>
                     </div>
                 </div>
+
+                <?php if(is_numeric($numOrgaos) && $numOrgaos > 1): ?>
+                <div class="row">
+                    <div class="col-sm-12 col-md-4 col-lg-3 col-xl-3">
+                        <label id="lblOrgaoPesquisa" for="selOrgaoPesquisa" accesskey="" class="infraLabelOpcional">Órgão Gerador:</label>
+                    </div>
+                    <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
+                        <select style="display: none" multiple id="selOrgaoPesquisa" name="selOrgaoPesquisa[]" onchange="tratarSelecaoOrgao()" class="w-100 infraSelect multipleSelect" tabindex="<?=PaginaSEI::getInstance()->getProxTabDados()?>">
+                          <?=$strOptionsOrgaos;?>
+                        </select>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <div class="row">
                     <div class="col-sm-12 col-md-4 col-lg-3 col-xl-3">
                         <label id="lblUnidade" for="txtUnidade" class="infraLabelOpcional">Unidade Geradora:</label>

@@ -43,7 +43,7 @@
 ## Orientações Negociais
 1. Imediatamente após a instalação com sucesso, com usuário com permissão de "Administrador" do SEI, acessar o menu de administração do Módulo pelo seguinte caminho: Administração > Pesquisa Pública > Parâmetros de Pesquisa. Somente com tudo parametrizado adequadamente será possível o uso do módulo por meio da página de Pesquisa Pública:
 
-		http://[Servidor_PHP]/sei/modulos/pesquisa/md_pesq_processo_pesquisar.php?acao_externa=protocolo_pesquisar&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo=0
+		http://[Servidor_PHP]/sei/modulos/pesquisa/md_pesq_processo_pesquisar.php?acao_externa=protocolo_pesquisar&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo=[id_orgao_acesso_externo]
 
 2. **Atenção:** Cuidado com o preenchimento do campo "Chave para criptografia dos links de processos e documentos" na Administração do módulo. Leia o texto no ícone de ajuda sobre o citado campo.
 3. A partir da versão 3.0.6 do módulo de Pesquisa Pública existe integração com o Módulo de Peticionamento e Intimação Eletrônicos, em que a Pesquisa Pública percebe se existe o mencionado módulo na versão 2.0.0 ou superior instalado no SEI e, com isso, tem comportamento próprio na tela de acesso ao processo pela Pesquisa Pública para **proteger o acesso a documento público que esteja relacionado com Intimação Eletrônica ainda não cumprida**.

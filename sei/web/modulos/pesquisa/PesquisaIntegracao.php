@@ -74,7 +74,7 @@
 				if(is_array($arrModulos) && array_key_exists('PesquisaIntegracao', $arrModulos)){
 					$caminho = $arrModulos['PesquisaIntegracao'];
 					$arrMenu = array();
-					$arrMenu[] = '-^'.ConfiguracaoSEI::getInstance()->getValor('SEI','URL').'/modulos/'.$caminho.'/md_pesq_processo_pesquisar.php?acao_externa=protocolo_pesquisar&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo'].'^^Pesquisa Pública^_blank^';
+					$arrMenu[] = '-^'.ConfiguracaoSEI::getInstance()->getValor('SEI','URL').'/modulos/'.$caminho.'/md_pesq_processo_pesquisar.php?acao_externa=protocolo_pesquisar&acao_origem_externa=protocolo_pesquisar^^Pesquisa Pública^_blank^';
 					return $arrMenu;
 				}
 			}
