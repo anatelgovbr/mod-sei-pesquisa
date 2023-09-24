@@ -13,8 +13,26 @@ require_once("MdPesqCriptografia.php");
 
 class MdPesqBuscaProtocoloExterno{
 
-    public static function executar($q, $strDescricaoPesquisa, $strObservacaoPesquisa, $inicio, $numMaxResultados = 50, $strParticipanteSolr, $md5Captcha = null)
+    public static function executar($parametrosSolr)
     {
+
+        $q                        = $parametrosSolr['q'];
+        $strDescricaoPesquisa     = $parametrosSolr['strDescricaoPesquisa'];
+        $strObservacaoPesquisa    = $parametrosSolr['strObservacaoPesquisa'];
+        $inicio                   = $parametrosSolr['inicio'];
+        $rowsSolr                 = $parametrosSolr['rowsSolr'];
+        $strParticipanteSolr      = $parametrosSolr['strParticipanteSolr'];
+        $md5Captcha               = $parametrosSolr['md5Captcha'];
+        $id_orgao_acesso_externo  = $parametrosSolr['id_orgao_acesso_externo'];
+        $selOrgaoPesquisa         = $parametrosSolr['selOrgaoPesquisa'];
+        $strIdUnidade             = $parametrosSolr['strIdUnidade'];
+        $numMaxResultados         = $parametrosSolr['numMaxResultados'];
+        $numIdTipoProcedimento    = $parametrosSolr['numIdTipoProcedimento'];
+        $numIdSerie               = $parametrosSolr['numIdSerie'];
+        $strIdParticipante        = $parametrosSolr['strIdParticipante'];
+        $strDataInicio            = implode('-', array_reverse(explode('/', $parametrosSolr['strDataInicio'])));
+        $strDataFim               = implode('-', array_reverse(explode('/', $parametrosSolr['strDataFim'])));
+
         //carrega configuracoes pesquisa
         $objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
         $objParametroPesquisaDTO->retStrNome();
@@ -73,21 +91,55 @@ class MdPesqBuscaProtocoloExterno{
             }
         }
 
+        // FILTRA PELO ORGAO GERADOR
+        if ($strIdUnidade == null && isset($selOrgaoPesquisa) && !empty($selOrgaoPesquisa)) {
+            $arrSelOrgaoPesquisa = [];
+            foreach ($selOrgaoPesquisa as $numIdOrgao) {
+                array_push($arrSelOrgaoPesquisa, "id_org_ger:" . $numIdOrgao);
+            }
+
+            if (count($arrSelOrgaoPesquisa) > 0) {
+                if ($partialfields != '') { $partialfields .= ' AND '; }
+                $partialfields .= '(' . implode(" OR ", $arrSelOrgaoPesquisa) . ')';
+            }
+        }
+
+        // FILTRA PELO INTERESSADO/REMETENTE/DESTINATARIO
+        if(!empty($strIdParticipante)){
+            $partialfields = preg_replace('/id_int:\*[^*]+\* AND /', '', $partialfields);
+            if ($partialfields != '') { $partialfields .= ' AND '; }
+            $partialfields .= '(id_int:*' . $strIdParticipante . '* OR id_rem:*' . $strIdParticipante . '* OR id_dest:*' . $strIdParticipante . '*)';
+        }
+
+        // FILTRA PELA UNIDADE GERADORA
+        if(!empty($strIdUnidade)) {
+            if ($partialfields != '') { $partialfields .= ' AND '; }
+            $partialfields .= '(id_uni_ger:' . $strIdUnidade . ')';
+        }
+
+      // FILTRA POR TIPO DE PROCESSO
+        if ($numIdTipoProcedimento != null) {
+            if ($partialfields != '') { $partialfields .= ' AND '; }
+            $partialfields .= '(id_tipo_proc:' . $numIdTipoProcedimento . ')';
+        }
+
+        // FILTRA POR TIPO DE DOCUMENTO
+        if ($numIdSerie != null) {
+            if ($partialfields != '') { $partialfields .= ' AND '; }
+            $partialfields .= '(id_serie:' . $numIdSerie . ')';
+        }
+
         /**
          * ELABORA A URL
          */
         $parametros->q = MdPesqSolrUtilExterno::formatarOperadores($q);
         if ($strDescricaoPesquisa != '') {
-            if ($parametros->q != '') {
-                $parametros->q .= ' AND ';
-            }
+            if ($parametros->q != '') { $parametros->q .= ' AND '; }
             $parametros->q .= '(' . MdPesqSolrUtilExterno::formatarOperadores($strDescricaoPesquisa, 'desc') . ')';
         }
 
         if ($strObservacaoPesquisa != '') {
-            if ($parametros->q != '') {
-                $parametros->q .= ' AND ';
-            }
+            if ($parametros->q != '') { $parametros->q .= ' AND '; }
             $parametros->q .= '(' . MdPesqSolrUtilExterno::formatarOperadores($strObservacaoPesquisa, 'desc' . SessaoSEI::getInstance()->getNumIdUnidadeAtual()) . ')';
         }
 
@@ -109,8 +161,7 @@ class MdPesqBuscaProtocoloExterno{
         }
 
         $pesquisaProtocolo = null;
-        preg_match("/prot_pesq:\*(.+)\*/", $parametros->q, $pesqProt);
-        if (count($pesqProt) > 0 && strpos($pesqProt[1], '(') !== 0) {
+        if (preg_match("/prot_pesq:\*(\d+)\*/", $parametros->q, $pesqProt)) {
             $pesquisaProtocolo = $pesqProt[1];
         }
 
@@ -151,7 +202,6 @@ class MdPesqBuscaProtocoloExterno{
             return $semResultados;
         }
 
-//        $html = "<table border=\"0\" class=\"pesquisaResultado\"><tbody>\n";
         $html = '';
         $removidos = 0;
 
@@ -250,20 +300,19 @@ class MdPesqBuscaProtocoloExterno{
             }
 
             // Protege contra a não idexação no solr quando o processo ou documento passa de público para restrito ou quando o documento possui intimações não cumpridas:
-	        if(!empty($objProtocoloDTO)){
-	            $isProcesso     = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
-	            $isDocumento    = $objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO;
-	            if(
-	                ( $isProcesso && $objProtocoloDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_SIGILOSO ) ||
-	                ( $isDocumento && !$isPublico && !is_null($pesquisaLivre) && ($pesquisaLivre != InfraSolrUtil::obterTag($registros[$i], 'prot_doc', 'str') || $pesquisaLivre == '\*') ) ||
-	                ( !$bolListaDocumentoProcessoPublico && ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_PUBLICO) ) ||
-	                ( !$bolListaDocumentoProcessoRestrito && ( ($isDocumento && !$isPublico) || ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) ) )
-	            ){
-	                $removidos++;
-	                continue;
-	            }
-	        }
-
+            if(!empty($objProtocoloDTO)){
+                $isProcesso     = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
+                $isDocumento    = $objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO;
+                if(
+                    ( $isProcesso && $objProtocoloDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_SIGILOSO ) ||
+                    ( $isDocumento && !$isPublico && !is_null($pesquisaLivre) && ($pesquisaLivre != InfraSolrUtil::obterTag($registros[$i], 'prot_doc', 'str') || $pesquisaLivre == '\*') ) ||
+                    ( !$bolListaDocumentoProcessoPublico && ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_PUBLICO) ) ||
+                    ( !$bolListaDocumentoProcessoRestrito && ( ($isDocumento && !$isPublico) || ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) ) )
+                ){
+                    $removidos++;
+                    continue;
+                }
+            }
 
             $arrMetatags = [];
             $strSiglaUnidadeGeradora = $strDescricaoUnidadeGeradora = "";
@@ -360,7 +409,7 @@ class MdPesqBuscaProtocoloExterno{
                 }
             }
 
-            $parametrosCriptografadosProcesso = MdPesqCriptografia::criptografa('acao_externa=md_pesq_processo_exibir&id_orgao_acesso_externo=0&id_procedimento=' . $idProcedimento);
+            $parametrosCriptografadosProcesso = MdPesqCriptografia::criptografa('acao_externa=md_pesq_processo_exibir&id_orgao_acesso_externo='.$id_orgao_acesso_externo.'&id_procedimento=' . $idProcedimento);
             $urlPesquisaProcesso = 'md_pesq_processo_exibir.php?' . $parametrosCriptografadosProcesso;
             $arvore = $urlPesquisaProcesso;
             $tituloLinkNumeroProcesso = "<a href=\"" . PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink(MdPesqSolrUtilExterno::prepararUrl($arvore))) . "\" title=\"Acessar\" target=\"_blank\" class=\"protocoloNormal processoVisitado\" onClick=\"infraLimparFormatarTrAcessada(this.parentNode.parentNode);\">";
@@ -390,7 +439,7 @@ class MdPesqBuscaProtocoloExterno{
                 }
                 $titulo .= " ";
                 if($isPublico){
-                    $parametrosCriptografadosDocumentos = MdPesqCriptografia::criptografa('acao_externa=md_pesq_documento_exibir&id_orgao_acesso_externo=0&id_documento=' . $objDocumentoDTO->getDblIdDocumento());
+                    $parametrosCriptografadosDocumentos = MdPesqCriptografia::criptografa('acao_externa=md_pesq_documento_exibir&id_orgao_acesso_externo='.$id_orgao_acesso_externo.'&id_documento=' . $objDocumentoDTO->getDblIdDocumento());
                     $endereco = 'md_pesq_documento_consulta_externa.php?' . $parametrosCriptografadosDocumentos;
                     $titulo .= "(<a title=\"Acessar\" target=\"_blank\" href=\"" . PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink($endereco)) . "\" onClick=\"infraLimparFormatarTrAcessada(this.parentNode.parentNode);\"";
                     $titulo .= " class=\"protocoloNormal\" style=\"padding:0px\">" . trim($dados["identificacao_protocolo"]) ."</a>)";

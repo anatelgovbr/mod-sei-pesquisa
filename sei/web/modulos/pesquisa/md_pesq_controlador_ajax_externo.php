@@ -87,6 +87,8 @@ try{
             $q                          = $_POST['q'];
             $inicio                     = intval($_GET['inicio']);
             $rowsSolr                   = intval($_GET['rowsSolr']);
+            $id_orgao_acesso_externo    = intval($_GET['id_orgao_acesso_externo']);
+            $selOrgaoPesquisa           = $_POST['selOrgaoPesquisa'];
 
             //Opção de Auto Completar Interressado
             if (!$bolAutocompletarInterressado) {
@@ -120,13 +122,32 @@ try{
             $objMdPesqParametroPesquisaDTO->retTodos();
             $objMdPesqParametroPesquisaDTO = (new MdPesqParametroPesquisaRN())->consultar($objMdPesqParametroPesquisaDTO);
 
+            $parametrosSolr = [
+                'q'                             => $q,
+                'strDescricaoPesquisa'          => $strDescricaoPesquisa,
+                'strObservacaoPesquisa'         => $strObservacaoPesquisa,
+                'inicio'                        => $inicio,
+                'rowsSolr'                      => $rowsSolr,
+                'strParticipanteSolr'           => $strParticipanteSolr,
+                'md5Captcha'                    => null,
+                'id_orgao_acesso_externo'       => $id_orgao_acesso_externo,
+                'selOrgaoPesquisa'              => $selOrgaoPesquisa,
+                'strIdUnidade'                  => $strIdUnidade,
+                'numMaxResultados'              => 50,
+                'selTipoProcedimentoPesquisa'   => $numIdTipoProcedimento,
+                'selSeriePesquisa'              => $numIdSerie,
+                'txtDataInicio'                 => $strDataInicio,
+                'txtDataFim'                    => $strDataFim,
+                'strIdParticipante'             => $strIdParticipante
+            ];
+
             if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
                 if ($bolCaptcha == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']]) && $_GET['isPaginacao'] == 'false') {
                     $xml = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">Código de confirmação inválido 1.</p></div></consultavazia>';
                 } else {
                     if (!InfraString::isBolVazia($q) || $bolPreencheuAvancado) {
                         try {
-                            $xml = MdPesqBuscaProtocoloExterno::executar($q, $strDescricaoPesquisa, $strObservacaoPesquisa, $inicio, $rowsSolr, $strParticipanteSolr, null);
+                            $xml = MdPesqBuscaProtocoloExterno::executar($parametrosSolr);
                         } catch (Exception $e) {
                             LogSEI::getInstance()->gravar(InfraException::inspecionar($e));
                             throw new InfraException('Erro realizando pesquisa.', $e);
@@ -135,22 +156,6 @@ try{
                 }
             } else {
                 $xml = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.</p></div></consultavazia>';
-            }
-            break;
-
-        case 'protocolo_pesquisar_captcha_reload':
-            $xml = '';
-
-            $objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
-            $objParametroPesquisaDTO->retStrNome();
-            $objParametroPesquisaDTO->retStrValor();
-            $arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO((new MdPesqParametroPesquisaRN())->listar($objParametroPesquisaDTO), 'Valor', 'Nome');
-
-            if ($arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA] == 'S') {
-                $strCodigoParaGeracaoCaptcha = InfraCaptcha::obterCodigo();
-                $md5Captcha = md5(InfraCaptcha::gerar($strCodigoParaGeracaoCaptcha));
-                $srcImgCaptcha = '/infra_js/infra_gerar_captcha.php?codetorandom='.$strCodigoParaGeracaoCaptcha.'&i='.$_GET['i'];
-                $xml = '<captcha><scrImgCaptcha>'.$srcImgCaptcha.'</scrImgCaptcha><md5Captcha>'.$md5Captcha.'</md5Captcha></captcha>';
             }
             break;
 		
