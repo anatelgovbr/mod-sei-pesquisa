@@ -136,8 +136,9 @@ class MdPesqAtualizadorSipRN extends InfraRN
 
     protected function instalarv300()
     {
+        $nmVersao = '3.0.0';
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 3.0.0 DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
         $strRotuloItemMenuPesquisaPublica = 'Pesquisa Pública';
         $strRotuloItemMenuParametrosPesquisaPublica = 'Parâmetros de Pesquisa';
 
@@ -242,45 +243,59 @@ class MdPesqAtualizadorSipRN extends InfraRN
 		
 		$this->logar('ADICIONANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
         BancoSip::getInstance()->executarSql('INSERT INTO infra_parametro (valor, nome) VALUES( \'3.0.0\',  \'' . $this->nomeParametroModulo . '\' )');
-
-        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 3.0.0 DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
-
+        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
     }
 
     protected function instalarv400()
     {
+        $nmVersao = '4.0.0';
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.0.0 DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
 
-        $this->logar('ATUALIZANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
-        BancoSip::getInstance()->executarSql('UPDATE infra_parametro SET valor = \'4.0.0\' WHERE nome = \'' . $this->nomeParametroModulo . '\' ');
-
-        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.0.0 DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
+        $this->atualizarNumeroVersao($nmVersao);
     }
-
 
     protected function instalarv401()
     {
+        $nmVersao = '4.0.1';
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.0.1 DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
 
-        $this->logar('ATUALIZANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
-        BancoSip::getInstance()->executarSql('UPDATE infra_parametro SET valor = \'4.0.1\' WHERE nome = \'' . $this->nomeParametroModulo . '\' ');
-
-        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.0.1 DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
+        $this->atualizarNumeroVersao($nmVersao);
     }
 
     protected function instalarv410()
     {
+        $nmVersao = '4.1.0';
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.1.0 DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
 
-        $this->logar('ATUALIZANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
-        BancoSip::getInstance()->executarSql('UPDATE infra_parametro SET valor = \'4.1.0\' WHERE nome = \'' . $this->nomeParametroModulo . '\' ');
-
-        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO 4.1.0 DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
+        $this->atualizarNumeroVersao($nmVersao);
     }
 
+	/**
+	 * Atualiza o número de versão do módulo na tabela de parâmetro do sistema
+	 *
+	 * @param string $parStrNumeroVersao
+	 * @return void
+	 */
+	private function atualizarNumeroVersao($parStrNumeroVersao)	{
+		$this->logar('ATUALIZANDO PARÂMETRO '. $this->nomeParametroModulo .' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
+
+		$objInfraParametroDTO = new InfraParametroDTO();
+		$objInfraParametroDTO->setStrNome($this->nomeParametroModulo);
+		$objInfraParametroDTO->retTodos();
+		$objInfraParametroBD = new InfraParametroBD(BancoSIP::getInstance());
+		$arrObjInfraParametroDTO = $objInfraParametroBD->listar($objInfraParametroDTO);
+
+		foreach ($arrObjInfraParametroDTO as $objInfraParametroDTO) {
+			$objInfraParametroDTO->setStrValor($parStrNumeroVersao);
+			$objInfraParametroBD->alterar($objInfraParametroDTO);
+		}
+        
+		$this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $parStrNumeroVersao .' DO '. $this->nomeDesteModulo .' REALIZADA COM SUCESSO NA BASE DO SIP');
+	}
+    
     private function adicionarRecursoPerfil($numIdSistema, $numIdPerfil, $strNome, $strCaminho = null)
     {
 
