@@ -96,7 +96,7 @@ try {
 	}
 	
 	//Mensagem Processo Restrito
-	$strMensagemProcessoRestrito = '';
+	$bolMensagemProcessoRestrito = false;
 	$strHipoteseLegal = '';
 	if($objProcedimentoDTO->getStrStaNivelAcessoGlobalProtocolo() == ProtocoloRN::$NA_RESTRITO && $bolLinkMetadadosProcessoRestrito){
 		
@@ -115,7 +115,7 @@ try {
    
     	}		
 		
-		$strMensagemProcessoRestrito = '<p style="font-size: 1.2em;"> '.$txtDescricaoProcessoAcessoRestrito.'</p>';
+		$bolMensagemProcessoRestrito = true;
 		
 	}
 	
@@ -264,6 +264,8 @@ try {
                                                             <th class="infraTh" width="15%">Data de Inclusão</th>
                                                             <th class="infraTh" width="15%">Unidade</th>
   					  									</tr>';
+
+   	$countDocsInDataCorte = 0;
    	
    	//Monta tabela documentos
    	foreach ($arrObjProtocoloPesquisaPublicaDTO as $objProtocoloPesquisaPublicaDTO){
@@ -328,7 +330,8 @@ try {
                         $strResultado .= '<td align="center"><span class="retiraAncoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</span>';
                         $strResultado .= '<img src="/infra_css/imagens/espaco.gif">';
                         $strResultado .= '<img src="../pesquisa/imagens/sei_chave_documento_restrito.svg" data-indicador="bbb" style="vertical-align: middle; width: 24px; margin-top: -3px;" title="Acesso Restrito. &#13'.'Provisoriamente em razão de necessidade de reclassificação de nível de acesso">';
-                    }else{
+                        $countDocsInDataCorte++;
+			        }else{
                         $strResultado .= '<td align="center" style="padding-right:22px"><a href="javascript:void(0);" onclick="window.open(\''.$strLinkDocumento.'\');" alt="'.PaginaSEIExterna::getInstance()->formatarXHTML($objDocumentoDTO->getStrNomeSerie()).'" title="'.PaginaSEIExterna::getInstance()->formatarXHTML($objDocumentoDTO->getStrNomeSerie()).'" class="ancoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</a></td>';
                     }
                 }
@@ -838,7 +841,9 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo,'onload="inicializar();"')
 
 <? PaginaSEIExterna::getInstance()->montarBarraComandosSuperior($arrComandos);
 echo $strResultadoCabecalho;
-echo $strMensagemProcessoRestrito;
+if($bolMensagemProcessoRestrito || $countDocsInDataCorte > 0){
+    echo '<p style="font-size: 1.2em;"> '.$txtDescricaoProcessoAcessoRestrito.'</p>';
+}
 PaginaSEIExterna::getInstance()->montarAreaTabela($strResultado,$numProtocolos);
 echo $strResultadoAndamentos;
 ?>

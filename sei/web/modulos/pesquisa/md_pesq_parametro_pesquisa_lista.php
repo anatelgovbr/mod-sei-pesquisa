@@ -37,13 +37,13 @@ try {
                     $arrParametroPesquisaDTO = array(
                         array('Nome' => MdPesqParametroPesquisaRN::$TA_CAPTCHA, 'Valor' => $_POST['chkCapcthaPesquisa']),
                         array('Nome' => MdPesqParametroPesquisaRN::$TA_CAPTCHA_PDF, 'Valor' => $_POST['chkCapcthaGerarPdf']),
-                        array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO, 'Valor' => $_POST['chkListaAndamentoProcessoPublico']),
-                        array('Nome' => MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO, 'Valor' => $_POST['chkMetaDadosProcessoRestrito']),
-                        array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_RESTRITO, 'Valor' => $_POST['chkListaAndamentoProcessoRestrito']),
+                        array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_PUBLICO, 'Valor' => $_POST['chkListaAndamentoProcessoPublico'] ?? 'S'), // Todo: Remover parametro 6 da Pesquisa
+                        array('Nome' => MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO, 'Valor' => $_POST['chkMetaDadosProcessoRestrito'] ?? 'S'), // Todo: Remover parametro 3 da Pesquisa
+                        array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_ANDAMENTO_PROCESSO_RESTRITO, 'Valor' => $_POST['chkListaAndamentoProcessoRestrito'] ?? 'S'), // Todo: Remover parametro 1 da Pesquisa
                         array('Nome' => MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO, 'Valor' => trim($_POST['txtDescricaoProcessoAcessoRestrito'])),
-                        array('Nome' => MdPesqParametroPesquisaRN::$TA_PESQUISA_DOCUMENTO_PROCESSO_RESTRITO, 'Valor' => $_POST['chkPesquisaDocumentoProcessoRestrito'] ?? 'N'),
-                        array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO, 'Valor' => $_POST['chkListaDocumentoProcessoPublico']),
-                        array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO, 'Valor' => $_POST['chkListaDocumentoProcessoRestrito']),
+                        array('Nome' => MdPesqParametroPesquisaRN::$TA_PESQUISA_DOCUMENTO_PROCESSO_RESTRITO, 'Valor' => $_POST['chkPesquisaDocumentoProcessoRestrito'] ?? 'S'), // Todo: Remover parametro 4 da Pesquisa
+                        array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_PUBLICO, 'Valor' => $_POST['chkListaDocumentoProcessoPublico'] ?? 'S'), // Todo: Remover parametro 5 da Pesquisa
+                        array('Nome' => MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO, 'Valor' => $_POST['chkListaDocumentoProcessoRestrito'] ?? 'S'), // Todo: Remover parametro 2 da Pesquisa
                         array('Nome' => MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO, 'Valor' => $_POST['chkAutoCompletarInteressado']),
                         array('Nome' => MdPesqParametroPesquisaRN::$TA_MENU_USUARIO_EXTERNO, 'Valor' => $_POST['chkMenuUsuarioExterno']),
                         array('Nome' => MdPesqParametroPesquisaRN::$TA_CHAVE_CRIPTOGRAFIA, 'Valor' => trim($_POST['txtChaveCriptografia'])),
@@ -179,11 +179,17 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
             </div>
         </div>
         <br/>
+        <?php
+
+            // Todo: Forcando para inutilizar o parametro. Remover
+
+            if(1 == 2):
+
+        ?>
         <div class="row">
             <div class="col-sm-12 col-md-12 col-lg-10 col-xl-10">
                 <fieldset class="infraFieldset sizeFieldset form-control" style="height: auto">
                     <legend class="infraLegend">Parâmetros de Pesquisa</legend>
-                    <?php if(1 == 2): ?>
                         <div class="row d-none">
                             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
                                 <div class="form-group">
@@ -203,7 +209,6 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
                                 </div>
                             </div>
                         </div>
-                    <?php endif; ?>
                     <div class="row">
                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
                             <div class="form-group">
@@ -223,7 +228,6 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
                             </div>
                         </div>
                     </div>
-                    <?php if(1 == 2): ?>
                     <div class="row d-none">
                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
                             <div class="form-group">
@@ -243,7 +247,6 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
                             </div>
                         </div>
                     </div>
-                    <?php endif; ?>
 
                     <div class="row">
                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
@@ -322,6 +325,19 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
             </div>
         </div>
         <br/>
+        <?php endif; ?>
+        <div class="row">
+            <div class="col-sm-12 col-md-12 col-lg-12 col-xl-11">
+                <div class="form-group">
+                    <div>
+                        <label id="lblDocumentoProcessoPublico" for="txtDescricaoProcessoAcessoRestrito" class="infraLabelObrigatorio">
+                            Justificativa de restrição de acesso e orientações para solicitar acesso:
+                        </label>
+                    </div>
+                    <textarea id="txtDescricaoProcessoAcessoRestrito" name="txtDescricaoProcessoAcessoRestrito" class="infraTextarea" rows="5" style="width: 90%" tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"><?= $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO] ?></textarea>
+                </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-sm-12 col-md-12 col-lg-10 col-xl-10">
                 <fieldset class="infraFieldset sizeFieldset form-control" style="height: auto">
@@ -365,7 +381,7 @@ PaginaSEI::getInstance()->abrirAreaDados(null);
                                         <img src="<?= PaginaSEI::getInstance()->getDiretorioSvgGlobal() ?>/ajuda.svg" name="ajuda" <?= PaginaSEI::montarTitleTooltip("Este campo deve estar preenchido para que a página da Pesquisa Pública do SEI possa funcionar. \n \n Não utilize a mesma Chave em ambientes do SEI distintos, não divulgue esta Chave para terceiros e se alterar esta Chave todos os links já existentes que usuários tenham não funcionarão mais. \n \n Defina uma Chave forte, preferencialmente maior que 12 caracteres, utilizando letras maiúsculas e minúsculas, números e caracteres especiais.", 'Ajuda') ?> alt="Ajuda" class="infraImgModulo"/>
                                     </label>
                                 </div>
-                                <input id="txtChaveCriptografia" name="txtChaveCriptografia" type="text" class="infraText" maxlength="100" style="width: 40%" value="<?= $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CHAVE_CRIPTOGRAFIA] ?>" tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"/>
+                                <input id="txtChaveCriptografia" name="txtChaveCriptografia" type="password" class="infraText" maxlength="100" style="width: 40%" value="<?= $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CHAVE_CRIPTOGRAFIA] ?>" tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>"/>
                             </div>
                         </div>
                     </div>
