@@ -39,10 +39,10 @@ class MdPesqBuscaProtocoloExterno{
         $objParametroPesquisaDTO->retStrValor();
         $arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO((new MdPesqParametroPesquisaRN())->listar($objParametroPesquisaDTO), 'Valor', 'Nome');
 
-        $bolPesquisaDocumentoProcessoRestrito   = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_PESQUISA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
-        $bolListaDocumentoProcessoRestrito      = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_LISTA_DOCUMENTO_PROCESSO_RESTRITO] == 'S' ? true : false;
-        $bolListaDocumentoProcessoPublico       = true; // Forcando para inutilizar o parametro
-        $bolLinkMetadadosProcessoRestrito       = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_METADADOS_PROCESSO_RESTRITO] == 'S' ? true : false;
+        $bolPesquisaDocumentoProcessoRestrito   = true; // Todo: Forcando para inutilizar o parametro. Remover
+        $bolListaDocumentoProcessoRestrito      = true; // Todo: Forcando para inutilizar o parametro. Remover
+        $bolListaDocumentoProcessoPublico       = true; // Todo: Forcando para inutilizar o parametro. Remover
+        $bolLinkMetadadosProcessoRestrito       = true; // Todo: Forcando para inutilizar o parametro. Remover
         $bolAutocompletarInterressado           = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
         $txtDescricaoProcedimentoAcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO];
 

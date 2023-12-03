@@ -453,7 +453,6 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
                         }
                         if($(data).find('consultavazia').length > 0){
                             $('.total-registros-infinite').html('A pesquisa encontrou '+$('.retorno-ajax > table tbody tr.pesquisaTituloRegistro').length+' resultado(s).');
-                            paginar = false;
                         }
                     }).always(function() {
                         $('.ajax-loading').hide();
@@ -478,6 +477,7 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
 
             $('input[name=partialfields]').val('');
             partialFields();
+            buscaInicio = 0;
 
             $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
             $('.total-registros-infinite').empty();
@@ -493,7 +493,7 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             <? endif; ?>
 
             $('.ajax-loading').show();
-            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio=0&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
+            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio='+buscaInicio+'&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
                 if($(data).find('resultado').length > 0){
                     $('.retorno-ajax > table > tbody:last-child').append($(data).find('resultado').html());
                     buscaInicio += rowsSolr;
