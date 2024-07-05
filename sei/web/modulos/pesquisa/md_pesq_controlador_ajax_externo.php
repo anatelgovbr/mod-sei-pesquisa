@@ -169,4 +169,3 @@ InfraAjax::enviarXML($xml);
 	//LogSEI::getInstance()->gravar('ERRO AJAX: '.$e->__toString());
 	InfraAjax::processarExcecao($e);
 }
-?>

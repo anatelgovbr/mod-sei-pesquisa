@@ -519,7 +519,6 @@ class MdPesqBuscaProtocoloExterno{
 
             }
         }
-//        $html .= "</tbody></table>\n";
 
         if(count($registros) - $removidos == 0){
             return $semResultados;
@@ -529,7 +528,6 @@ class MdPesqBuscaProtocoloExterno{
         $pagLinksBottom = MdPesqSolrUtilExterno::criarBarraNavegacao($itens, $inicio, 10, PaginaSEIExterna::getInstance(), SessaoSEIExterna::getInstance(), $md5Captcha);
 
         return '<resultado itens="'.$itens.'" urlsolar="">'.$html.'</resultado>';
-//        return $html;
 
     }
 

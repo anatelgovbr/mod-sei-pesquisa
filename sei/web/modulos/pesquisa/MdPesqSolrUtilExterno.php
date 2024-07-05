@@ -30,11 +30,7 @@ class MdPesqSolrUtilExterno
             $arrPalavrasQ[$i] = MdPesqSolrUtilExterno::formatarCaracteresEspeciais(str_replace('"', '', $arrPalavrasQ[$i]));
 
             if (strpos($arrPalavrasQ[$i], ' ') !== false){
-                if ($tag == null){
-                    $arrPalavrasQ[$i] = '"' . $arrPalavrasQ[$i] . '"';
-                } else {
-                    $arrPalavrasQ[$i] = $tag . ':"' . $arrPalavrasQ[$i] . '"';
-                }
+	            $arrPalavrasQ[$i] = ($tag == null) : '"' . $arrPalavrasQ[$i] . '"' : $tag . ':"' . $arrPalavrasQ[$i] . '"';
             } else if ($arrPalavrasQ[$i] == 'e') {
                 $arrPalavrasQ[$i] = "AND";
             } else if ($arrPalavrasQ[$i] == 'ou') {

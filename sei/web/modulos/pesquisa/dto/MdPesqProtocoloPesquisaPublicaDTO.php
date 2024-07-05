@@ -26,5 +26,6 @@ class MdPesqProtocoloPesquisaPublicaDTO extends InfraDTO {
 		$this->adicionarAtributo(InfraDTO::$PREFIXO_STR, 'StaAssociacao');
 		$this->adicionarAtributo(InfraDTO::$PREFIXO_OBJ, 'DocumentoDTO');
 		$this->adicionarAtributo(InfraDTO::$PREFIXO_OBJ, 'ProcedimentoDTO');
-	}	
+	}
+	
 }
