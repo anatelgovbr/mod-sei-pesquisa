@@ -6,7 +6,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
 
     private $numSeg = 0;
     private $versaoAtualDesteModulo = '4.1.0';
-    private $nomeDesteModulo = 'MÓDULO DE PESQUISA PÚBLICA';
+    private $nomeDesteModulo = 'MÃ“DULO DE PESQUISA PÃšBLICA';
     private $nomeParametroModulo = 'VERSAO_MODULO_PESQUISA_PUBLICA';
     private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1', '4.1.0');
 
@@ -50,7 +50,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
     {
         if (!$bolErro) {
             $this->numSeg = InfraUtil::verificarTempoProcessamento($this->numSeg);
-            $this->logar('TEMPO TOTAL DE EXECUÇÃO: ' . $this->numSeg . ' s');
+            $this->logar('TEMPO TOTAL DE EXECUÃ‡ÃƒO: ' . $this->numSeg . ' s');
         } else {
             $strMsg = 'ERRO: ' . $strMsg;
         }
@@ -79,19 +79,20 @@ class MdPesqAtualizadorSipRN extends InfraRN
     {
         
         try {
-            $this->inicializar('INICIANDO A INSTALAÇÃO/ATUALIZAÇÃO DO ' . $this->nomeDesteModulo . ' NO SIP VERSÃO ' . SIP_VERSAO);
+            $this->inicializar('INICIANDO A INSTALAÃ‡ÃƒO/ATUALIZAÃ‡ÃƒO DO ' . $this->nomeDesteModulo . ' NO SIP VERSÃƒO ' . SIP_VERSAO);
 
             //checando BDs suportados
             if (!(BancoSip::getInstance() instanceof InfraMySql) &&
                 !(BancoSip::getInstance() instanceof InfraSqlServer) &&
-                !(BancoSip::getInstance() instanceof InfraOracle)) {
-                $this->finalizar('BANCO DE DADOS NÃO SUPORTADO: ' . get_parent_class(BancoSip::getInstance()), true);
+                !(BancoSip::getInstance() instanceof InfraOracle) &&
+				!(BancoSip::getInstance() instanceof InfraPostgreSql)) {
+                $this->finalizar('BANCO DE DADOS NÃƒO SUPORTADO: ' . get_parent_class(BancoSip::getInstance()), true);
             }
 
             //testando versao do framework
             $numVersaoInfraRequerida = '2.0.18';
 	        if ($this->normalizaVersao(VERSAO_INFRA) < $this->normalizaVersao($numVersaoInfraRequerida)) {
-                $this->finalizar('VERSÃO DO FRAMEWORK PHP INCOMPATÍVEL (VERSÃO ATUAL ' . VERSAO_INFRA . ', SENDO REQUERIDA VERSÃO IGUAL OU SUPERIOR A ' . $numVersaoInfraRequerida . ')', true);
+                $this->finalizar('VERSÃƒO DO FRAMEWORK PHP INCOMPATÃVEL (VERSÃƒO ATUAL ' . VERSAO_INFRA . ', SENDO REQUERIDA VERSÃƒO IGUAL OU SUPERIOR A ' . $numVersaoInfraRequerida . ')', true);
             }
 
             //checando permissoes na base de dados
@@ -119,7 +120,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
                     break;
 
                 default:
-                    $this->finalizar('A VERSÃO MAIS ATUAL DO ' . $this->nomeDesteModulo . ' (v' . $this->versaoAtualDesteModulo . ') JÁ ESTÁ INSTALADA.');
+                    $this->finalizar('A VERSÃƒO MAIS ATUAL DO ' . $this->nomeDesteModulo . ' (v' . $this->versaoAtualDesteModulo . ') JÃ ESTÃ INSTALADA.');
                     break;
 
             }
@@ -130,7 +131,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
             InfraDebug::getInstance()->setBolLigado(true);
             InfraDebug::getInstance()->setBolDebugInfra(true);
             InfraDebug::getInstance()->setBolEcho(true);
-            throw new InfraException('Erro instalando/atualizando versão.', $e);
+            throw new InfraException('Erro instalando/atualizando versÃ£o.', $e);
         }
     }
 
@@ -138,9 +139,9 @@ class MdPesqAtualizadorSipRN extends InfraRN
     {
         $nmVersao = '3.0.0';
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
-        $strRotuloItemMenuPesquisaPublica = 'Pesquisa Pública';
-        $strRotuloItemMenuParametrosPesquisaPublica = 'Parâmetros de Pesquisa';
+        $this->logar('EXECUTANDO A INSTALAÃ‡ÃƒO/ATUALIZAÃ‡ÃƒO DA VERSÃƒO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $strRotuloItemMenuPesquisaPublica = 'Pesquisa PÃºblica';
+        $strRotuloItemMenuParametrosPesquisaPublica = 'ParÃ¢metros de Pesquisa';
 
         $objSistemaRN = new SistemaRN();
         $objPerfilRN = new PerfilRN();
@@ -155,7 +156,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
         $objSistemaDTO = $objSistemaRN->consultar($objSistemaDTO);
 
         if ($objSistemaDTO == null) {
-            throw new InfraException('Sistema SEI não encontrado.');
+            throw new InfraException('Sistema SEI nÃ£o encontrado.');
         }
 
         $numIdSistemaSei = $objSistemaDTO->getNumIdSistema();
@@ -167,7 +168,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
         $objPerfilDTO = $objPerfilRN->consultar($objPerfilDTO);
 
         if ($objPerfilDTO == null) {
-            throw new InfraException('Perfil Administrador do sistema SEI não encontrado.');
+            throw new InfraException('Perfil Administrador do sistema SEI nÃ£o encontrado.');
         }
 
         $numIdPerfilSeiAdministrador = $objPerfilDTO->getNumIdPerfil();
@@ -179,7 +180,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
         $objMenuDTO = $objMenuRN->consultar($objMenuDTO);
 
         if ($objMenuDTO == null) {
-            throw new InfraException('Menu do sistema SEI não encontrado.');
+            throw new InfraException('Menu do sistema SEI nÃ£o encontrado.');
         }
 
         $numIdMenuSei = $objMenuDTO->getNumIdMenu();
@@ -187,16 +188,16 @@ class MdPesqAtualizadorSipRN extends InfraRN
         $objItemMenuDTO = new ItemMenuDTO();
         $objItemMenuDTO->retNumIdItemMenu();
         $objItemMenuDTO->setNumIdSistema($numIdSistemaSei);
-        $objItemMenuDTO->setStrRotulo('Administração');
+        $objItemMenuDTO->setStrRotulo('AdministraÃ§Ã£o');
         $objItemMenuDTO = $objItemMenuRN->consultar($objItemMenuDTO);
 
         if ($objItemMenuDTO == null) {
-            throw new InfraException('Item de menu Administração do sistema SEI não encontrado.');
+            throw new InfraException('Item de menu AdministraÃ§Ã£o do sistema SEI nÃ£o encontrado.');
         }
 
         $numIdItemMenuSeiAdministracao = $objItemMenuDTO->getNumIdItemMenu();
 
-        $this->logar('ATUALIZANDO RECURSOS, MENUS E PERFIS DO MÓDULO DE PESQUISA NA BASE DO SIP...');
+        $this->logar('ATUALIZANDO RECURSOS, MENUS E PERFIS DO MÃ“DULO DE PESQUISA NA BASE DO SIP...');
 
         //criando os recursos e vinculando-os aos perfil Administrador
         $this->adicionarRecursoPerfil($numIdSistemaSei, $numIdPerfilSeiAdministrador, 'md_pesq_parametro_alterar');
@@ -241,16 +242,16 @@ class MdPesqAtualizadorSipRN extends InfraRN
         $objSistemaRN = new SistemaRN();
         $objSistemaRN->replicarRegraAuditoria($objReplicacaoRegraAuditoriaDTO);
 		
-		$this->logar('ADICIONANDO PARÂMETRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
+		$this->logar('ADICIONANDO PARÃ‚METRO ' . $this->nomeParametroModulo . ' NA TABELA infra_parametro PARA CONTROLAR A VERSÃƒO DO MÃ“DULO');
         BancoSip::getInstance()->executarSql('INSERT INTO infra_parametro (valor, nome) VALUES( \'3.0.0\',  \'' . $this->nomeParametroModulo . '\' )');
-        $this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
+        $this->logar('INSTALAÃ‡ÃƒO/ATUALIZAÃ‡ÃƒO DA VERSÃƒO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' REALIZADA COM SUCESSO NA BASE DO SIP');
     }
 
     protected function instalarv400()
     {
         $nmVersao = '4.0.0';
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÃ‡ÃƒO/ATUALIZAÃ‡ÃƒO DA VERSÃƒO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
 
         $this->atualizarNumeroVersao($nmVersao);
     }
@@ -259,7 +260,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
     {
         $nmVersao = '4.0.1';
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÃ‡ÃƒO/ATUALIZAÃ‡ÃƒO DA VERSÃƒO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
 
         $this->atualizarNumeroVersao($nmVersao);
     }
@@ -268,19 +269,19 @@ class MdPesqAtualizadorSipRN extends InfraRN
     {
         $nmVersao = '4.1.0';
 
-        $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+        $this->logar('EXECUTANDO A INSTALAÃ‡ÃƒO/ATUALIZAÃ‡ÃƒO DA VERSÃƒO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
 
         $this->atualizarNumeroVersao($nmVersao);
     }
 
 	/**
-	 * Atualiza o número de versão do módulo na tabela de parâmetro do sistema
+	 * Atualiza o nÃºmero de versÃ£o do mÃ³dulo na tabela de parÃ¢metro do sistema
 	 *
 	 * @param string $parStrNumeroVersao
 	 * @return void
 	 */
 	private function atualizarNumeroVersao($parStrNumeroVersao)	{
-		$this->logar('ATUALIZANDO PARÂMETRO '. $this->nomeParametroModulo .' NA TABELA infra_parametro PARA CONTROLAR A VERSÃO DO MÓDULO');
+		$this->logar('ATUALIZANDO PARÃ‚METRO '. $this->nomeParametroModulo .' NA TABELA infra_parametro PARA CONTROLAR A VERSÃƒO DO MÃ“DULO');
 
 		$objInfraParametroDTO = new InfraParametroDTO();
 		$objInfraParametroDTO->setStrNome($this->nomeParametroModulo);
@@ -293,7 +294,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
 			$objInfraParametroBD->alterar($objInfraParametroDTO);
 		}
         
-		$this->logar('INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $parStrNumeroVersao .' DO '. $this->nomeDesteModulo .' REALIZADA COM SUCESSO NA BASE DO SIP');
+		$this->logar('INSTALAÃ‡ÃƒO/ATUALIZAÃ‡ÃƒO DA VERSÃƒO '. $parStrNumeroVersao .' DO '. $this->nomeDesteModulo .' REALIZADA COM SUCESSO NA BASE DO SIP');
 	}
     
     private function adicionarRecursoPerfil($numIdSistema, $numIdPerfil, $strNome, $strCaminho = null)
