@@ -161,7 +161,7 @@ class MdPesqBuscaProtocoloExterno{
         }
 
         $pesquisaProtocolo = null;
-        if (preg_match("/prot_pesq:\*(\d+)\*/", $parametros->q, $pesqProt)) {
+        if (preg_match("/prot_pesq:\*(\w+)\*/", $parametros->q, $pesqProt)) {
             $pesquisaProtocolo = $pesqProt[1];
         }
 

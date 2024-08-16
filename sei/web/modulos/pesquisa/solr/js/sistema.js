@@ -35,12 +35,9 @@ function removerAcentos(texto) {
 	
 	var contador = 0;
 	var letras = {
-		  procurar: ["á", "ã", "à", "â", "ä", "ç", "é", "ê", "è", "ë", "í", "ì", "ï", "ó", "õ", "ô", "ö", "ò", "ú", "ü", "ù", "ñ",  ,"("    ,")"],
-		substituir: ["a", "a", "a", "a", "a", "c", "e", "e", "e", "e", "i", "i", "i", "o", "o", "o", "o", "o", "u", "u", "u", "n", "&#40;", "&#41;"]
+		  procurar: ["á", "Á", "ã", "Ã", "à", "À", "â", "Â", "ä", "Ä", "ç", "Ç", "é", "É", "ê", "Ê", "è", "È", "ë", "Ë", "í", "Í", "ì", "Ì", "ï", "Ï", "ó", "Ó", "õ", "Õ", "ô", "Ô", "ö", "Ö", "ò", "Ò", "ú", "Ú", "ü", "Ü", "ù", "Ù", "ñ", "Ñ" ,"("    ,")"],
+		substituir: ["a", "A", "a", "A", "a", "A", "a", "A", "a", "A", "c", "C", "e", "E", "e", "E", "e", "E", "e", "E", "i", "I", "i", "I", "i", "I", "o", "O", "o", "O", "o", "O", "o", "O", "o", "O", "u", "U", "u", "U", "u", "U", "n", "N", "&#40;", "&#41;"]
 	}
-	
-	texto = texto.toLowerCase();
-	
 	
 	for (contador; contador < letras.procurar.length; contador += 1) {
 		texto = texto.replace(letras.procurar[contador], letras.substituir[contador]);
@@ -152,11 +149,11 @@ validar.dividir = function(valor, regra) {
 validar.limpar = function(valor) {
 	var contador = 0;
 	var letras = {
-		  procurar: ["á", "ã", "à", "â", "ä", "ç", "é", "ê", "è", "ë", "í", "ì", "ï", "ó", "õ", "ô", "ö", "ò", "ú", "ü", "ù", "ñ"],
-		substituir: ["a", "a", "a", "a", "a", "c", "e", "e", "e", "e", "i", "i", "i", "o", "o", "o", "o", "o", "u", "u", "u", "n"]
+		  procurar: ["á", "Á", "ã", "Ã", "à", "À", "â", "Â", "ä", "Ä", "ç", "Ç", "é", "É", "ê", "Ê", "è", "È", "ë", "Ë", "í", "Í", "ì", "Ì", "ï", "Ï", "ó", "Ó", "õ", "Õ", "ô", "Ô", "ö", "Ö", "ò", "Ò", "ú", "Ú", "ü", "Ü", "ù", "Ù", "ñ", "Ñ"],
+		substituir: ["a", "A", "a", "A", "a", "A", "a", "A", "a", "A", "c", "C", "e", "E", "e", "E", "e", "E", "e", "E", "i", "I", "i", "I", "i", "I", "o", "O", "o", "O", "o", "O", "o", "O", "o", "O", "u", "U", "u", "U", "u", "U", "n", "N"]
 	}
 	
-	valor = String(valor).replace(/^\s+|\s+$/g, "").toLowerCase();
+	valor = String(valor).replace(/^\s+|\s+$/g, "");
 	
 	for (contador; contador < letras.procurar.length; contador += 1) {
 		valor = valor.replace(letras.procurar[contador], letras.substituir[contador]);
