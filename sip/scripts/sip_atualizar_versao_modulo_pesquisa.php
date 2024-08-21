@@ -65,14 +65,21 @@ class MdPesqAtualizadorSipRN extends InfraRN
         $this->numSeg = 0;
         die;
     }
-
-	protected function normalizaVersao($versao)
-    {
-		$ultimoPonto = strrpos($versao, '.');
-		if ($ultimoPonto !== false) {
-			$versao = substr($versao, 0, $ultimoPonto) . substr($versao, $ultimoPonto + 1);
+	
+	protected function normalizarVersao($versao) {
+		$partes = explode('.', $versao);
+		foreach ($partes as &$parte) {
+			$parte = str_pad($parte, 2, '0', STR_PAD_RIGHT);
 		}
-		return $versao;
+		return implode('.', $partes);
+	}
+	
+	protected function versaoInfraCompativel($vrsInfra, $vrsMinReq) {
+		if (preg_match('/^\d+(\.\d+){1,4}$/', $vrsMinReq) && preg_match('/^\d+(\.\d+){1,4}$/', $vrsInfra)) {
+			return ($this->normalizarVersao($vrsInfra) >= $this->normalizarVersao($vrsMinReq)) ? true : false;
+		}else{
+			return false;
+		}
 	}
 
     protected function atualizarVersaoConectado()
@@ -90,7 +97,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
 
             //testando versao do framework
             $numVersaoInfraRequerida = '2.0.18';
-	        if ($this->normalizaVersao(VERSAO_INFRA) < $this->normalizaVersao($numVersaoInfraRequerida)) {
+	        if(!$this->versaoInfraCompativel(VERSAO_INFRA, $numVersaoInfraRequerida)){
                 $this->finalizar('VERSÃO DO FRAMEWORK PHP INCOMPATÍVEL (VERSÃO ATUAL ' . VERSAO_INFRA . ', SENDO REQUERIDA VERSÃO IGUAL OU SUPERIOR A ' . $numVersaoInfraRequerida . ')', true);
             }
 
