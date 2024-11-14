@@ -88,23 +88,12 @@ class MdPesqPesquisaUtil {
 	{
 		$objContatoDTO = new ContatoDTO();
     	$objContatoDTO->retNumIdContato();
-    	
     	$objContatoDTO->setStrPalavrasPesquisa($strNomeParticipante);
-  
-    	if ($numIdGrupoContato!=''){
-      		$objContatoDTO->setNumIdGrupoContato($numIdGrupoContato);
-    	}
-  
   	  	$objContatoDTO->setNumMaxRegistrosRetorno(50);
-  
     	$objContatoDTO->setOrdStrNome(InfraDTO::$TIPO_ORDENACAO_ASC);
-  
-    	$objContatoRN = new ContatoRN();
-    	$arrObjContatoDTO = $objContatoRN->pesquisarRN0471($objContatoDTO);
-    	
-    	$ret = MdPesqPesquisaUtil::preparaIdParticipantes($arrObjContatoDTO);
-    
-    	return $ret;
+        $arrObjContatoDTO = (new ContatoRN())->pesquisarRN0471($objContatoDTO);
+		
+		return MdPesqPesquisaUtil::preparaIdParticipantes($arrObjContatoDTO);
 	}
 	
 	public static function valiadarLink($strLink = null)
@@ -174,7 +163,7 @@ class MdPesqPesquisaUtil {
 				$objOrgaoDTO = $objOrgaoRN->consultarRN1352($objOrgaoDTO);
 
 				if ($objOrgaoDTO==null){
-					$this->sair(null, 'Link externo inválido.');
+					throw new InfraException('Link externo inválido.');
 				}
 
 				SessaoSEIExterna::getInstance()->setAtributo('ID_ORGAO_USUARIO_EXTERNO', $objOrgaoDTO->getNumIdOrgao());

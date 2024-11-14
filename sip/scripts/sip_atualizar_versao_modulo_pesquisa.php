@@ -5,10 +5,10 @@ class MdPesqAtualizadorSipRN extends InfraRN
 {
 
     private $numSeg = 0;
-    private $versaoAtualDesteModulo = '4.1.0';
+    private $versaoAtualDesteModulo = '4.2.0';
     private $nomeDesteModulo = 'MÓDULO DE PESQUISA PÚBLICA';
     private $nomeParametroModulo = 'VERSAO_MODULO_PESQUISA_PUBLICA';
-    private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1', '4.1.0');
+    private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1', '4.1.0', '4.2.0');
 
     public function __construct()
     {
@@ -65,21 +65,14 @@ class MdPesqAtualizadorSipRN extends InfraRN
         $this->numSeg = 0;
         die;
     }
-	
-	protected function normalizarVersao($versao) {
-		$partes = explode('.', $versao);
-		foreach ($partes as &$parte) {
-			$parte = str_pad($parte, 2, '0', STR_PAD_RIGHT);
+
+	protected function normalizaVersao($versao)
+    {
+		$ultimoPonto = strrpos($versao, '.');
+		if ($ultimoPonto !== false) {
+			$versao = substr($versao, 0, $ultimoPonto) . substr($versao, $ultimoPonto + 1);
 		}
-		return implode('.', $partes);
-	}
-	
-	protected function versaoInfraCompativel($vrsInfra, $vrsMinReq) {
-		if (preg_match('/^\d+(\.\d+){1,4}$/', $vrsMinReq) && preg_match('/^\d+(\.\d+){1,4}$/', $vrsInfra)) {
-			return ($this->normalizarVersao($vrsInfra) >= $this->normalizarVersao($vrsMinReq)) ? true : false;
-		}else{
-			return false;
-		}
+		return $versao;
 	}
 
     protected function atualizarVersaoConectado()
@@ -91,13 +84,14 @@ class MdPesqAtualizadorSipRN extends InfraRN
             //checando BDs suportados
             if (!(BancoSip::getInstance() instanceof InfraMySql) &&
                 !(BancoSip::getInstance() instanceof InfraSqlServer) &&
-                !(BancoSip::getInstance() instanceof InfraOracle)) {
+                !(BancoSip::getInstance() instanceof InfraOracle) &&
+	            !(BancoSip::getInstance() instanceof InfraPostgreSql)) {
                 $this->finalizar('BANCO DE DADOS NÃO SUPORTADO: ' . get_parent_class(BancoSip::getInstance()), true);
             }
 
             //testando versao do framework
             $numVersaoInfraRequerida = '2.0.18';
-	        if(!$this->versaoInfraCompativel(VERSAO_INFRA, $numVersaoInfraRequerida)){
+            if (version_compare(VERSAO_INFRA, $numVersaoInfraRequerida) < 0) {
                 $this->finalizar('VERSÃO DO FRAMEWORK PHP INCOMPATÍVEL (VERSÃO ATUAL ' . VERSAO_INFRA . ', SENDO REQUERIDA VERSÃO IGUAL OU SUPERIOR A ' . $numVersaoInfraRequerida . ')', true);
             }
 
@@ -123,6 +117,8 @@ class MdPesqAtualizadorSipRN extends InfraRN
                     $this->instalarv401();
                 case '4.0.1':
                     $this->instalarv410();
+	            case '4.1.0':
+		            $this->instalarv420();
                     break;
 
                 default:
@@ -279,6 +275,15 @@ class MdPesqAtualizadorSipRN extends InfraRN
 
         $this->atualizarNumeroVersao($nmVersao);
     }
+	
+	protected function instalarv420()
+	{
+		$nmVersao = '4.2.0';
+		
+		$this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+		
+		$this->atualizarNumeroVersao($nmVersao);
+	}
 
 	/**
 	 * Atualiza o número de versão do módulo na tabela de parâmetro do sistema

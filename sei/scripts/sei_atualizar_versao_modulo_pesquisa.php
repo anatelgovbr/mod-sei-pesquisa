@@ -5,10 +5,10 @@ class MdPesqAtualizadorSeiRN extends InfraRN
 {
 
     private $numSeg = 0;
-    private $versaoAtualDesteModulo = '4.1.0';
+    private $versaoAtualDesteModulo = '4.2.0';
     private $nomeDesteModulo = 'MÓDULO DE PESQUISA PÚBLICA';
     private $nomeParametroModulo = 'VERSAO_MODULO_PESQUISA_PUBLICA';
-    private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1', '4.1.0');
+    private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1', '4.1.0', '4.2.0');
 
     public function __construct()
     {
@@ -65,21 +65,14 @@ class MdPesqAtualizadorSeiRN extends InfraRN
         $this->numSeg = 0;
         die;
     }
-	
-	protected function normalizarVersao($versao) {
-		$partes = explode('.', $versao);
-		foreach ($partes as &$parte) {
-			$parte = str_pad($parte, 2, '0', STR_PAD_RIGHT);
+
+	protected function normalizaVersao($versao)
+    {
+		$ultimoPonto = strrpos($versao, '.');
+		if ($ultimoPonto !== false) {
+			$versao = substr($versao, 0, $ultimoPonto) . substr($versao, $ultimoPonto + 1);
 		}
-		return implode('.', $partes);
-	}
-	
-	protected function versaoInfraCompativel($vrsInfra, $vrsMinReq) {
-		if (preg_match('/^\d+(\.\d+){1,4}$/', $vrsMinReq) && preg_match('/^\d+(\.\d+){1,4}$/', $vrsInfra)) {
-			return ($this->normalizarVersao($vrsInfra) >= $this->normalizarVersao($vrsMinReq)) ? true : false;
-		}else{
-			return false;
-		}
+		return $versao;
 	}
 
     protected function atualizarVersaoConectado()
@@ -91,13 +84,14 @@ class MdPesqAtualizadorSeiRN extends InfraRN
             //checando BDs suportados
             if (!(BancoSEI::getInstance() instanceof InfraMySql) &&
                 !(BancoSEI::getInstance() instanceof InfraSqlServer) &&
-                !(BancoSEI::getInstance() instanceof InfraOracle)) {
+                !(BancoSEI::getInstance() instanceof InfraOracle) &&
+                !(BancoSEI::getInstance() instanceof InfraPostgreSql)) {
                 $this->finalizar('BANCO DE DADOS NÃO SUPORTADO: ' . get_parent_class(BancoSEI::getInstance()), true);
             }
 
             //testando versao do framework
             $numVersaoInfraRequerida = '2.0.18';
-	        if(!$this->versaoInfraCompativel(VERSAO_INFRA, $numVersaoInfraRequerida)){
+            if (version_compare(VERSAO_INFRA, $numVersaoInfraRequerida) < 0) {
                 $this->finalizar('VERSÃO DO FRAMEWORK PHP INCOMPATÍVEL (VERSÃO ATUAL ' . VERSAO_INFRA . ', SENDO REQUERIDA VERSÃO IGUAL OU SUPERIOR A ' . $numVersaoInfraRequerida . ')', true);
             }
 
@@ -123,6 +117,8 @@ class MdPesqAtualizadorSeiRN extends InfraRN
                     $this->instalarv401();
                 case '4.0.1':
                     $this->instalarv410();
+	            case '4.1.0':
+		            $this->instalarv420();
                     break;
 
                 default:
@@ -151,7 +147,7 @@ class MdPesqAtualizadorSeiRN extends InfraRN
 
         $this->logar('CRIANDO A TABELA md_pesq_parametro');
         BancoSEI::getInstance()->executarSql('CREATE TABLE md_pesq_parametro (
-					nome ' . $objInfraMetaBD->tipoTextoVariavel(100) . ' NOT NULL , 
+					nome ' . $objInfraMetaBD->tipoTextoVariavel(100) . ' NOT NULL ,
 					valor ' . $objInfraMetaBD->tipoTextoGrande() . ' NOT NULL
 					)');
 
@@ -224,16 +220,23 @@ class MdPesqAtualizadorSeiRN extends InfraRN
 
         $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SEI');
 
-        $this->logar('ALTERANDO COLUNA valor NA TABELA md_pesq_parametro PARA ACEITAR VALOR NULO');
-        //Alterando a coluna "valor" da tabela "md_pesq_parametro" para aceitar NULL antes inserir novo parâmetro "DATA_CORTE"
+        $this->logar('ALTERANDO COLUNA valor NA TABELA md_pesq_parametro PARA ACEITAR VALOR NULO ANTES DE ADICIONAR O PARAMETRO DATA_CORTE');
         if (BancoSEI::getInstance() instanceof InfraOracle) {
+        	
             BancoSEI::getInstance()->executarSql('alter table md_pesq_parametro rename column valor to valor_old');
             $objInfraMetaBD->adicionarColuna('md_pesq_parametro', 'valor', $objInfraMetaBD->tipoTextoGrande(), 'NULL');
             BancoSEI::getInstance()->executarSql('UPDATE md_pesq_parametro SET valor = valor_old');
             $objInfraMetaBD->excluirColuna('md_pesq_parametro','valor_old');
-          }else {
+            
+        } else if (BancoSEI::getInstance() instanceof InfraPostgreSql) {
+	
+	        BancoSEI::getInstance()->executarSql('ALTER TABLE md_pesq_parametro ALTER COLUMN valor DROP NOT NULL');
+	
+        }else {
+        	
             $objInfraMetaBD->alterarColuna('md_pesq_parametro', 'valor', $objInfraMetaBD->tipoTextoGrande(), 'NULL');
-          }
+            
+        }
         
         $this->logar('INSERINDO NOVO PARÂMETRO "DATA_CORTE" NA TABELA md_pesq_parametro');
 
@@ -252,6 +255,94 @@ class MdPesqAtualizadorSeiRN extends InfraRN
         BancoSEI::getInstance()->executarSql($sqlTabela);
 
         $this->atualizarNumeroVersao($nmVersao);
+    }
+    
+    protected function instalarv420(){
+	
+	    $nmVersao = '4.2.0';
+	
+	    $this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '.$nmVersao.' DO ' . $this->nomeDesteModulo . ' NA BASE DO SEI');
+	
+	    $objInfraMetaBD = new InfraMetaBD(BancoSEI::getInstance());
+	    $objInfraMetaBD->setBolValidarIdentificador(true);
+	
+	    $this->logar('>>>> MIGRANDO PARÂMETROS DO UTILIDADES PARA O PESQUISA PÚBLICA');
+	
+	    $arrStrModulos = [ 0 => 'UTILIDADES' , 1 => 'PESQUISA_PUBLICA'];
+	
+	    $strNomeAtual   = $arrStrModulos[0];
+	    $strNomeQueSera = $arrStrModulos[1];
+	
+	    $arrParametros = array(
+		    'MODULO_'.$strNomeAtual.'_BLOQUEAR_BLOQUEAR_PROCESSO_COM_DOCUMENTO_RESTRITO_USANDO_HIPOTESE_LEGAL',
+		    'MODULO_'.$strNomeAtual.'_BLOQUEAR_CONCLUIR_PROCESSO_COM_DOCUMENTO_RESTRITO_USANDO_HIPOTESE_LEGAL',
+	    );
+	
+	    $objInfraParametroRN = new InfraParametroRN();
+	    $objInfraParametro   = new InfraParametro(BancoSEI::getInstance());
+	
+	    foreach ( $arrParametros as $str ) {
+		
+		    $arrNomeParam    = explode( '_' , $str );
+		    $arrNomeParam[1] = $strNomeQueSera;
+		    $strNovoParam    = implode( '_' , $arrNomeParam );
+		
+		    if ( $objInfraParametro->isSetValor( $str ) ){
+			
+			    $vlrParam = $objInfraParametro->getValor( $str );
+			
+			    // processo para cadastrar o parametro no modulo do peticionamento
+			    $objInfraParametroDTO = new InfraParametroDTO();
+			    $objInfraParametroDTO->setStrNome($strNovoParam);
+			    $objInfraParametroDTO->setStrValor($vlrParam);
+			    $objInfraParametroRN->cadastrar($objInfraParametroDTO);
+			
+			    $this->logar('------------------------------------------------------------------------');
+			    $this->logar("Cadastrado o parâmetro: $strNovoParam");
+			    $this->logar('------------------------------------------------------------------------');
+			
+			    // processo para excluir o parametro usado como referencia do modulo utilidades
+			    $objInfraParametroDTO = new InfraParametroDTO();
+			    $objInfraParametroDTO->setStrNome($str);
+			    $objInfraParametroDTO->retTodos();
+			    $objInfraParametroDTO = $objInfraParametroRN->listar($objInfraParametroDTO);
+			    $objInfraParametroRN->excluir($objInfraParametroDTO);
+			    $this->logar('------------------------------------------------------------------------');
+			    $this->logar("Excluído o parâmetro: $str");
+			    $this->logar('------------------------------------------------------------------------');
+			
+		    }else{
+			
+			    // processo para cadastrar o parametro no modulo do peticionamento
+			    $objInfraParametroDTO = new InfraParametroDTO();
+			    $objInfraParametroDTO->setStrNome($strNovoParam);
+			    $objInfraParametroDTO->setStrValor(NULL);
+			    $objInfraParametroRN->cadastrar($objInfraParametroDTO);
+			
+			    $this->logar('------------------------------------------------------------------------');
+			    $this->logar("Cadastrado o parâmetro: $strNovoParam");
+			    $this->logar('------------------------------------------------------------------------');
+		    	
+		    }
+		
+	    }
+	    
+	    $excluirParametro = 'MODULO_UTILIDADES_BLOQUEAR_GERAR_PROCESSO_SEM_PELO_MENOS_UM_INTERESSADO';
+	
+	    // processo para excluir o parametro usado como referencia do modulo utilidades
+	    $objInfraParametroDTO = new InfraParametroDTO();
+	    $objInfraParametroDTO->setStrNome($excluirParametro);
+	    $objInfraParametroDTO->retTodos();
+	    $objInfraParametroDTO = $objInfraParametroRN->listar($objInfraParametroDTO);
+	
+	    $objInfraParametroRN->excluir($objInfraParametroDTO);
+	    
+	    $this->logar('------------------------------------------------------------------------');
+	    $this->logar("Excluído o parâmetro: $excluirParametro");
+	    $this->logar('------------------------------------------------------------------------');
+	    
+	    $this->atualizarNumeroVersao($nmVersao);
+    	
     }
 
 	protected function fixIndices(InfraMetaBD $objInfraMetaBD, $arrTabelas)
