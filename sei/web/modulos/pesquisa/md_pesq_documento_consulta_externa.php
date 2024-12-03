@@ -281,7 +281,7 @@ try {
 		echo '<title>:: '.PaginaSEIExterna::getInstance()->getStrNomeSistema().' - '.$strTitulo.' ::</title>';
 		echo '</head>';
 		echo '<body>';
-		echo MdPesqDocumentoExternoINT::formatarExibicaoConteudo(DocumentoINT::$TV_HTML, $objDocumentoDTO->getStrConteudo(), PaginaSEIExterna::getInstance(), SessaoSEIExterna::getInstance(), '');
+		echo MdPesqDocumentoExternoINT::formatarExibicaoConteudo(DocumentoINT::$TV_HTML, $objDocumentoDTO, PaginaSEIExterna::getInstance(), SessaoSEIExterna::getInstance(), '');
 		echo '</body>';
 		echo '</html>';
 	}

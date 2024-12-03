@@ -10,8 +10,9 @@
 
 class MdPesqDocumentoExternoINT extends DocumentoINT{
 	
-	public static function formatarExibicaoConteudo($strTipoVisualizacao, $strConteudo, $objInfraPagina=null, $objInfraSessao=null, $strLinkDownload=null)
+	public static function formatarExibicaoConteudo($strTipoVisualizacao, $objDocumentoDTO, $objInfraPagina=null, $objInfraSessao=null, $strLinkDownload=null)
 	{
+        $strConteudo = $objDocumentoDTO->getStrConteudo();
 		$strResultado = '';
 	
 		if (!InfraString::isBolVazia($strConteudo)){
@@ -57,11 +58,15 @@ class MdPesqDocumentoExternoINT extends DocumentoINT{
 					$arrValores = $atributo->getElementsByTagName('valores');
 	
 					if ($arrValores->length==0){
-						//nao mostra item que nao possua valor
-						if (!InfraString::isBolVazia($atributo->nodeValue)){
-							$strResultado .= $strNovaLinha.$strItemInicio.self::formatarTagConteudo($strTipoVisualizacao,$atributo->getAttribute('titulo')).$strItemFim.': '.$strNovaLinha.$strEspaco.$strEspaco.self::formatarTagConteudo($strTipoVisualizacao,$atributo->nodeValue);
-							$strResultado .= $strNovaLinha;
-						}
+
+                        $objDocumentoRN = new DocumentoRN();
+
+                        $dto = new DocumentoDTO();
+                        $dto->setDblIdDocumento($objDocumentoDTO->getDblIdDocumento());
+                        $dto->setObjInfraSessao(SessaoSEI::getInstance());
+
+                        echo $objDocumentoRN->consultarHtmlFormulario($dto);
+                        break;
 					}else{
 							
 						if ($atributo->getAttribute('titulo')!=''){
