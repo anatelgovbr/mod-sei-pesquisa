@@ -8,7 +8,7 @@
 - **Atenção**: nas máquinas que rodam o SEI deve instalar a biblioteca PHP "php-mcrypt".
 - Antes de executar os scripts de instalação/atualização, o usuário de acesso aos bancos de dados do SEI e do SIP, constante nos arquivos ConfiguracaoSEI.php e ConfiguracaoSip.php, deverá ter permissão de acesso total ao banco de dados, permitindo, por exemplo, criação e exclusão de tabelas.
 - Os códigos-fonte do Módulo podem ser baixados a partir do link a seguir, devendo sempre utilizar a versão mais recente: [https://github.com/anatelgovbr/mod-sei-pesquisa/releases](https://github.com/anatelgovbr/mod-sei-pesquisa/releases "Clique e acesse")
-- Se já tiver instalado a versão principal com a execução dos scripts de banco do módulo no SEI e no SIP, então basta sobrescrever os códigos e não precisa executar os scripts de banco novamente.
+- Se já tiver instalado versão principal com a execução dos scripts de banco do módulo no SEI e no SIP, **em versões intermediárias basta sobrescrever os códigos** e não precisa executar os scripts de banco novamente.
 	- Atualizações apenas de código são identificadas com o incremento apenas do terceiro dígito da versão (p. ex. v4.1.1, v4.1.2) e não envolve execução de scripts de banco.
 
 ## Procedimentos para Instalação
@@ -36,7 +36,6 @@
 7. **IMPORTANTE**: Na execução dos dois scripts de banco acima, ao final deve constar o termo "FIM", o "TEMPO TOTAL DE EXECUÇÃO" e a informação de que a instalação/atualização foi realizada com sucesso na base de dados correspondente (SEM ERROS). Do contrário, o script não foi executado até o final e algum dado não foi inserido/atualizado no respectivo banco de dados, devendo recuperar o backup do banco e repetir o procedimento.
 	- Constando ao final da execução do script as informações indicadas, pode logar no SEI e SIP e verificar no menu **Infra > Parâmetros** dos dois sistemas se consta o parâmetro "VERSAO_MODULO_PESQUISA_PUBLICA" com o valor da última versão do módulo.
 8. Em caso de erro durante a execução do script, verificar (lendo as mensagens de erro e no menu Infra > Log do SEI e do SIP) se a causa é algum problema na infraestrutura local ou ajustes indevidos na estrutura de banco do core do sistema. Neste caso, após a correção, deve recuperar o backup do banco pertinente e repetir o procedimento, especialmente a execução dos scripts de banco indicados acima.
-	- Caso não seja possível identificar a causa, entrar em contato com: <a href="mailto:neijobson@anatel.gov.br">neijobson@anatel.gov.br</a>
 9. Após a execução com sucesso, com um usuário com permissão de Administrador no SEI, seguir os passos dispostos no tópico "Orientações Negociais" mais abaixo.
 10. **Atenção**: nas máquinas que rodam o SEI deve instalar a biblioteca PHP "php-mcrypt".
 
@@ -52,4 +51,10 @@
 4. A partir da versão 4.1.0 do módulo de Pesquisa Pública foi criado o parâmetro "Data de Corte Opcional" na Administração do módulo. Leia o texto no ícone de ajuda sobre o citado campo.
 	- Caso seja inserida uma Data de Corte, o módulo protege a pesquisa dentro do conteúdo e o acesso aos documentos com nível de acesso Público que tenham data de inclusão (no caso de Documento Externo ou Automático) ou data da primeira assinatura (no caso de Documento Gerado ou Formulário) anterior à data de corte informada.
 	- Nesse cenário, no acesso ao processo, ao lado do protocolo do documento constará o ícone de uma chave azul indicando a situação de restrição provisória em razão de necessidade de reclassificação de nível de acesso.
-5. A partir da versão 4.1.2 do módulo de Pesquisa Pública foi ajustada a verificação da versão mínima requerida do InfraPHP do core do SEI que está na versão 2.0.6 e correções sobre o correto funcionamento do novo captcha com acessibilidade para permitir seu correto funcionamento em várias telas abertas ao mesmo tempo.
+5. Os tipos de Andamentos listados quando é aberto um processo pela Pesquisa Pública é parametrizável no mesmo local que administra a lista de Andamentos visíveis para Acesso Externo do SEI, pelo menu Administração > Histórico, marcando ou desmarcando a coluna "Resumido".
+6. A partir da versão 4.1.2 do módulo foram eliminados quatro parâmetros na Administração que ocultavam metadados sobre o processo, o que seria contrário à LAI. O teor de documentos restritos nunca é pesquisável e acessado e a listagem em si dos Protocolos constantes no processo e dos Andamentos ocorridos no processo não é informação restrita que possa ser ocultada.
+
+## Erros ou Sugestões
+1. [Abrir Issue](https://github.com/anatelgovbr/mod-sei-pesquisa/issues) no repositório do GitHub do módulo se ocorrer erro na execução dos scripts de banco do módulo no SEI ou no SIP acima.
+2. [Abrir Issue](https://github.com/anatelgovbr/mod-sei-pesquisa/issues) no repositório do GitHub do módulo se ocorrer erro na operação do módulo.
+3. Na abertura da Issue utilizar o modelo **"1 - Reportar Erro"**.
