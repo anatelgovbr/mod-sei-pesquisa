@@ -9,7 +9,7 @@ class PesquisaIntegracao extends SeiIntegracao {
 	
 	public function getVersao()
 	{
-		return '4.2.1';
+		return '4.2.2';
 	}
 	
 	
