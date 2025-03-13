@@ -497,53 +497,81 @@ try {
 
     $strResultadoAndamentos = '';
 
-    $strResultadoAndamentos .= '<table id="tblHistorico" width="99.3%" class="infraTable" summary="Histórico de Andamentos">'."\n";    
-    $strResultadoAndamentos .= '<caption class="infraCaption">'.PaginaSEIExterna::getInstance()->gerarCaptionTabela('Andamentos',$numRegistrosAtividades).'</caption>';
-		$strResultadoAndamentos .= '<tr>';
-		$strResultadoAndamentos .= '<th class="infraTh" width="20%">Data/Hora</th>';
-		$strResultadoAndamentos .= '<th class="infraTh" width="10%">Unidade</th>';
-		$strResultadoAndamentos .= '<th class="infraTh">Descrição</th>';
-		$strResultadoAndamentos .= '</tr>'."\n";					
+	$strQuebraLinha = '<span style="line-height:.5em"><br /></span>';
 
-		$strQuebraLinha = '<span style="line-height:.5em"><br /></span>';
-		 
-		
+    $objAtributoAndamentoRN = new AtributoAndamentoRN();
+
+    $numTotalAndamento = 0;
     foreach($arrObjAtividadeDTO as $objAtividadeDTO){    	
         
         //InfraDebug::getInstance()->gravar($objAtividadeDTO->getNumIdAtividade());
-      
-        $strResultadoAndamentos .= "\n\n".'<!-- '.$objAtividadeDTO->getNumIdAtividade().' -->'."\n";
-        
-				if ($objAtividadeDTO->getStrSinUltimaUnidadeHistorico() == 'S'){		
-					$strAbertas = 'class="andamentoAberto"';
-				}else{
-					$strAbertas = 'class="andamentoConcluido"';
-				}	
-				
-				$strResultadoAndamentos .= '<tr '.$strAbertas.'>';		
-				$strResultadoAndamentos .= "\n".'<td align="center">';
-			  $strResultadoAndamentos .= substr($objAtividadeDTO->getDthAbertura(),0,16);
-				$strResultadoAndamentos .= '</td>';
-				
-				$strResultadoAndamentos .= "\n".'<td align="center">';
-			  $strResultadoAndamentos .= '<a alt="'.$objAtividadeDTO->getStrDescricaoUnidade().'" title="'.$objAtividadeDTO->getStrDescricaoUnidade().'" class="ancoraSigla">'.$objAtividadeDTO->getStrSiglaUnidade().'</a>';
-				$strResultadoAndamentos .= '</td>';
-				
-				$strResultadoAndamentos .= "\n";
-			  $strResultadoAndamentos .= "\n".'<td>';
 
-				if (!InfraString::isBolVazia($objAtividadeDTO->getStrNomeTarefa())){
-					$strResultadoAndamentos .= nl2br($objAtividadeDTO->getStrNomeTarefa()).$strQuebraLinha;
-				}
-					
-				$strResultadoAndamentos .= '</td>';
-					
-				$strResultadoAndamentos .= '</tr>';				
+        // Verifica se a atividade corresponde a um documento
+        $objAtributoAndamentoDTO = new AtributoAndamentoDTO();
+
+        $objAtributoAndamentoDTO->setNumIdAtividade($objAtividadeDTO->getNumIdAtividade());
+        $objAtributoAndamentoDTO->setStrNome('DOCUMENTO');
+        $objAtributoAndamentoDTO->retStrValor();
+        $objAtributoAndamentoDTO->retStrIdOrigem();
+
+        $arrAtribAndamento = $objAtributoAndamentoRN->listarRN1367($objAtributoAndamentoDTO);
+
+        if ( !empty($arrAtribAndamento) ) {
+            //verifica se o documento relacionado a esta atividade/andamento está assinado
+            $id_doc = $arrAtribAndamento[0]->getStrIdOrigem();
+
+            $objAssinaturaDTO = new AssinaturaDTO();
+            $objAssinaturaDTO->setDblIdDocumento($id_doc);
+            $objAssinaturaDTO->retNumIdAssinatura();
+
+            $countAss = ( new AssinaturaRN() )->contarRN1324($objAssinaturaDTO);
+
+            // se nao tem assinatura, pula para a proxima atividade/andamento
+            if ( $countAss == 0 ) continue;
+        }
+        
+        if ($objAtividadeDTO->getStrSinUltimaUnidadeHistorico() == 'S'){
+            $strAbertas = 'class="andamentoAberto"';
+        }else{
+            $strAbertas = 'class="andamentoConcluido"';
+        }
+
+        $strResultadoAndamentos .= '<tr '.$strAbertas.' data-atividade="'.$objAtividadeDTO->getNumIdAtividade().'">';
+
+        #$strResultadoAndamentos .= '<td>'. ($numTotalAndamento + 1) .'</td>';
+
+        $strResultadoAndamentos .= "\n".'<td align="center">';
+        $strResultadoAndamentos .= substr($objAtividadeDTO->getDthAbertura(),0,16);
+        $strResultadoAndamentos .= '</td>';
+
+        $strResultadoAndamentos .= "\n".'<td align="center">';
+        $strResultadoAndamentos .= '<a alt="'.$objAtividadeDTO->getStrDescricaoUnidade().'" title="'.$objAtividadeDTO->getStrDescricaoUnidade().'" class="ancoraSigla">'.$objAtividadeDTO->getStrSiglaUnidade().'</a>';
+        $strResultadoAndamentos .= '</td>';
+
+        $strResultadoAndamentos .= "\n";
+        $strResultadoAndamentos .= "\n".'<td>';
+
+        if (!InfraString::isBolVazia($objAtividadeDTO->getStrNomeTarefa())){
+            $strResultadoAndamentos .= nl2br($objAtividadeDTO->getStrNomeTarefa()).$strQuebraLinha;
+        }
+
+        $strResultadoAndamentos .= '</td>';
+
+        $strResultadoAndamentos .= '</tr>';
+
+        $numTotalAndamento++;
   	}
-    $strResultadoAndamentos .= '</table><br />';
+
+    $strResultadoAndamentosCab = '<table id="tblHistorico" width="99.3%" class="infraTable" summary="Histórico de Andamentos">
+                                     <caption class="infraCaption">'.PaginaSEIExterna::getInstance()->gerarCaptionTabela('Andamentos',$numTotalAndamento).'</caption>
+                                     <tr>                                         
+                                         <th class="infraTh" width="20%">Data/Hora</th>
+                                         <th class="infraTh" width="10%">Unidade</th>
+                                         <th class="infraTh">Descrição</th>
+                                     </tr>';
+
+    $strResultadoAndamentosFinal = $strResultadoAndamentosCab . $strResultadoAndamentos . '</table><br />';
   }
-  
-  
   
   AuditoriaSEI::getInstance()->auditar('processo_consulta_externa', __FILE__, strip_tags($strResultadoCabecalho)."\n".strip_tags($strResultado));
   
@@ -845,7 +873,7 @@ if($bolMensagemProcessoRestrito || $countDocsInDataCorte > 0){
     echo '<p style="font-size: 1.2em;"> '.$txtDescricaoProcessoAcessoRestrito.'</p>';
 }
 PaginaSEIExterna::getInstance()->montarAreaTabela($strResultado,$numProtocolos);
-echo $strResultadoAndamentos;
+echo $strResultadoAndamentosFinal;
 ?>
 <input type="hidden" id="hdnFlagGerar" name="hdnFlagGerar" value="0" />
 </form>
