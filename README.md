@@ -5,7 +5,7 @@
 ## Requisitos
 - Requisito Mínimo é o SEI 4.0.12 instalado/atualizado - Não é compatível com versões anteriores e em versões mais recentes é necessário conferir antes se possui compatibilidade.
 	- Verificar valor da constante de versão no arquivo /sei/web/SEI.php ou, após logado no sistema, parando o mouse sobre a logo do SEI no canto superior esquerdo.
-- **Atenção**: nas máquinas que rodam o SEI deve instalar a biblioteca PHP "php-mcrypt".
+- **Atenção**: na máquina do SEI, o módulo **openssl** do PHP deve estar ativado.
 - Antes de executar os scripts de instalação/atualização, o usuário de acesso aos bancos de dados do SEI e do SIP, constante nos arquivos ConfiguracaoSEI.php e ConfiguracaoSip.php, deverá ter permissão de acesso total ao banco de dados, permitindo, por exemplo, criação e exclusão de tabelas.
 - Os códigos-fonte do Módulo podem ser baixados a partir do link a seguir, devendo sempre utilizar a versão mais recente: [https://github.com/anatelgovbr/mod-sei-pesquisa/releases](https://github.com/anatelgovbr/mod-sei-pesquisa/releases "Clique e acesse")
 - Se já tiver instalado versão principal com a execução dos scripts de banco do módulo no SEI e no SIP, **em versões intermediárias basta sobrescrever os códigos** e não precisa executar os scripts de banco novamente.
@@ -37,7 +37,9 @@
 	- Constando ao final da execução do script as informações indicadas, pode logar no SEI e SIP e verificar no menu **Infra > Parâmetros** dos dois sistemas se consta o parâmetro "VERSAO_MODULO_PESQUISA_PUBLICA" com o valor da última versão do módulo.
 8. Em caso de erro durante a execução do script, verificar (lendo as mensagens de erro e no menu Infra > Log do SEI e do SIP) se a causa é algum problema na infraestrutura local ou ajustes indevidos na estrutura de banco do core do sistema. Neste caso, após a correção, deve recuperar o backup do banco pertinente e repetir o procedimento, especialmente a execução dos scripts de banco indicados acima.
 9. Após a execução com sucesso, com um usuário com permissão de Administrador no SEI, seguir os passos dispostos no tópico "Orientações Negociais" mais abaixo.
-10. **Atenção**: nas máquinas que rodam o SEI deve instalar a biblioteca PHP "php-mcrypt".
+10. Executar o comando abaixo na máquina do SEI para checar se o módulo **openssl** do PHP está ativado. A saída deve conter: `OpenSSL support => enabled`.
+
+		php -i | grep -i openssl
 
 ## Orientações Negociais
 1. Imediatamente após a instalação com sucesso, com usuário com permissão de "Administrador" do SEI, acessar o menu de administração do Módulo pelo seguinte caminho: Administração > Pesquisa Pública > Parâmetros de Pesquisa. Somente com tudo parametrizado adequadamente será possível o uso do módulo por meio da página de Pesquisa Pública:
