@@ -40,20 +40,24 @@ try {
     $arrObjOrgaoDTO = (new OrgaoRN())->listarRN1353($objOrgaoDTO);
 
     $numOrgaos = count($arrObjOrgaoDTO);
-
-    $strOptionsOrgaos = '';
-    foreach($arrObjOrgaoDTO as $objOrgaoDTO){
-        $strOptionsOrgaos .= '<option value="'.$objOrgaoDTO->getNumIdOrgao().'"';
-        if (isset($_POST['selOrgaoPesquisa'])){
-            if (in_array($objOrgaoDTO->getNumIdOrgao(), $arrNumIdOrgao)) {
-                $strOptionsOrgaos .= ' selected="selected"';
-            }
-        }else{
-            $strOptionsOrgaos .= ' selected="selected"';
-        }
-        $strOptionsOrgaos .= '>'.PaginaPublicacoes::tratarHTML($objOrgaoDTO->getStrSigla()).'</option>'."\n";
+	
+	if($numOrgaos > 1){
+		
+		$arrNumIdOrgao      = !empty($_POST['selOrgaoPesquisa']) && is_array($_POST['selOrgaoPesquisa']) ? array_map('trim', $_POST['selOrgaoPesquisa']) : [];
+		$strOptionsOrgaos   = '';
+		
+		foreach($arrObjOrgaoDTO as $objOrgaoDTO){
+		 
+			$strOptionsOrgaos .= '<option value="'.$objOrgaoDTO->getNumIdOrgao().'"';
+			if (count($arrNumIdOrgao) > 0 && in_array($objOrgaoDTO->getNumIdOrgao(), $arrNumIdOrgao)){
+				$strOptionsOrgaos .= ' selected="selected"';
+			}
+			$strOptionsOrgaos .= '>'.PaginaPublicacoes::tratarHTML($objOrgaoDTO->getStrSigla()).'</option>'."\n";
+			
+		}
+    
     }
-    // Final da montagem do multiple select de orgaos
+	// Final da montagem do multiple select de orgaos
 
     $bolCaptcha = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_CAPTCHA] == 'S' ? true : false;
     $bolAutocompletarInterressado = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
@@ -81,13 +85,8 @@ try {
             PaginaSEIExterna::getInstance()->salvarCampo('chkSinProcessos', 'P');
 
         } else {
-
-            if(isset($_POST['selOrgaoPesquisa'])){
-                $arrNumIdOrgao = $_POST['selOrgaoPesquisa'];
-                if (!is_array($arrNumIdOrgao)){
-                    $arrNumIdOrgao = [$arrNumIdOrgao];
-                }
-            }
+	
+	        $arrNumIdOrgao = !empty($_POST['selOrgaoPesquisa']) && is_array($_POST['selOrgaoPesquisa']) ? array_map('trim', $_POST['selOrgaoPesquisa']) : [];
 
             PaginaSEIExterna::getInstance()->salvarCampo('selOrgaoPesquisa', implode(',',$arrNumIdOrgao));
             PaginaSEI::getInstance()->salvarCampo('chkSinRestringirOrgao', $_POST['chkSinRestringirOrgao']);
@@ -128,7 +127,7 @@ try {
 
         PaginaSEIExterna::getInstance()->salvarCampo('q', '');
         PaginaSEIExterna::getInstance()->salvarCampo('selOrgaoPesquisa', '');
-        PaginaSEIExterna::getInstance()->salvarCampo('txtProtocoloPesquisa', $strProtocoloFormatadoLimpo);
+        PaginaSEIExterna::getInstance()->salvarCampo('txtProtocoloPesquisa', '');
         PaginaSEIExterna::getInstance()->salvarCampo('chkSinProcessos', 'P');
         PaginaSEIExterna::getInstance()->salvarCampo('chkSinDocumentosGerados', '');
         PaginaSEIExterna::getInstance()->salvarCampo('chkSinDocumentosRecebidos', '');
@@ -162,32 +161,39 @@ try {
         case 'protocolo_pesquisa_rapida':
 
             // Altero os caracteres 'Coringas' por aspas Duplas para não dar erro de Js no IE
-            $strPalavrasPesquisa = str_replace("$*", '\"', PaginaSEIExterna::getInstance()->recuperarCampo('q'));
-            $strSinProcessos = PaginaSEIExterna::getInstance()->recuperarCampo('chkSinProcessos');
-            $strSinDocumentosGerados = PaginaSEIExterna::getInstance()->recuperarCampo('chkSinDocumentosGerados');
-            $strSinDocumentosRecebidos = PaginaSEIExterna::getInstance()->recuperarCampo('chkSinDocumentosRecebidos');
-            $strIdParticipante = PaginaSEIExterna::getInstance()->recuperarCampo('hdnIdParticipante');
-            $strNomeParticipante = PaginaSEIExterna::getInstance()->recuperarCampo('txtParticipante');
-            $strIdAssinante = PaginaSEIExterna::getInstance()->recuperarCampo('hdnIdAssinante');
-            $strNomeAssinante = PaginaSEIExterna::getInstance()->recuperarCampo('txtAssinante');
-            $strDescricaoPesquisa = PaginaSEIExterna::getInstance()->recuperarCampo('txtDescricaoPesquisa');
-            $strObservacaoPesquisa = PaginaSEIExterna::getInstance()->recuperarCampo('txtObservacaoPesquisa');
-            $strIdAssunto = PaginaSEIExterna::getInstance()->recuperarCampo('hdnIdAssunto');
-            $strDescricaoAssunto = PaginaSEIExterna::getInstance()->recuperarCampo('txtAssunto');
-            $strIdUnidade = PaginaSEIExterna::getInstance()->recuperarCampo('hdnIdUnidade');
-            $strDescricaoUnidade = PaginaSEIExterna::getInstance()->recuperarCampo('txtUnidade');
-            $strProtocoloPesquisa = PaginaSEIExterna::getInstance()->recuperarCampo('txtProtocoloPesquisa');
-            $numIdTipoProcedimento = PaginaSEIExterna::getInstance()->recuperarCampo('selTipoProcedimentoPesquisa', 'null');
-            $numIdSerie = PaginaSEIExterna::getInstance()->recuperarCampo('selSeriePesquisa', 'null');
+            $strPalavrasPesquisa        = str_replace("$*", '\"', PaginaSEIExterna::getInstance()->recuperarCampo('q'));
+            $strSinProcessos            = PaginaSEIExterna::getInstance()->recuperarCampo('chkSinProcessos');
+            $strSinDocumentosGerados    = PaginaSEIExterna::getInstance()->recuperarCampo('chkSinDocumentosGerados');
+            $strSinDocumentosRecebidos  = PaginaSEIExterna::getInstance()->recuperarCampo('chkSinDocumentosRecebidos');
+            $strIdParticipante          = PaginaSEIExterna::getInstance()->recuperarCampo('hdnIdParticipante');
+            $strNomeParticipante        = PaginaSEIExterna::getInstance()->recuperarCampo('txtParticipante');
+            $strIdAssinante             = PaginaSEIExterna::getInstance()->recuperarCampo('hdnIdAssinante');
+            $strNomeAssinante           = PaginaSEIExterna::getInstance()->recuperarCampo('txtAssinante');
+            $strDescricaoPesquisa       = PaginaSEIExterna::getInstance()->recuperarCampo('txtDescricaoPesquisa');
+            $strObservacaoPesquisa      = PaginaSEIExterna::getInstance()->recuperarCampo('txtObservacaoPesquisa');
+            $strIdAssunto               = PaginaSEIExterna::getInstance()->recuperarCampo('hdnIdAssunto');
+            $strDescricaoAssunto        = PaginaSEIExterna::getInstance()->recuperarCampo('txtAssunto');
+            $strIdUnidade               = PaginaSEIExterna::getInstance()->recuperarCampo('hdnIdUnidade');
+            $strDescricaoUnidade        = PaginaSEIExterna::getInstance()->recuperarCampo('txtUnidade');
+            $strProtocoloPesquisa       = PaginaSEIExterna::getInstance()->recuperarCampo('txtProtocoloPesquisa');
+            $numIdTipoProcedimento      = PaginaSEIExterna::getInstance()->recuperarCampo('selTipoProcedimentoPesquisa', 'null');
+            $numIdSerie                 = PaginaSEIExterna::getInstance()->recuperarCampo('selSeriePesquisa', 'null');
             $strNumeroDocumentoPesquisa = PaginaSEIExterna::getInstance()->recuperarCampo('txtNumeroDocumentoPesquisa');
-            $strStaData = PaginaSEIExterna::getInstance()->recuperarCampo('rdoData');
-            $strDataInicio = PaginaSEIExterna::getInstance()->recuperarCampo('txtDataInicio');
-            $strDataFim = PaginaSEIExterna::getInstance()->recuperarCampo('txtDataFim');
-            $strSiglaUsuario1 = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario1');
-            $strSiglaUsuario2 = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario2');
-            $strSiglaUsuario3 = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario3');
-            $strSiglaUsuario4 = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario4');
-            $strUsuarios = PaginaSEIExterna::getInstance()->recuperarCampo('hdnSiglasUsuarios');
+            $strStaData                 = PaginaSEIExterna::getInstance()->recuperarCampo('rdoData');
+            $strDataInicio              = PaginaSEIExterna::getInstance()->recuperarCampo('txtDataInicio');
+            $strDataFim                 = PaginaSEIExterna::getInstance()->recuperarCampo('txtDataFim');
+            $strSiglaUsuario1           = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario1');
+            $strSiglaUsuario2           = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario2');
+            $strSiglaUsuario3           = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario3');
+            $strSiglaUsuario4           = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario4');
+            $strUsuarios                = PaginaSEIExterna::getInstance()->recuperarCampo('hdnSiglasUsuarios');
+	
+            $strParticipanteSolr        = '';
+            $q                          = $_POST['q'];
+            $inicio                     = intval($_GET['inicio']);
+            $rowsSolr                   = intval($_GET['rowsSolr']);
+            $id_orgao_acesso_externo    = intval($_GET['id_orgao_acesso_externo']);
+            $selOrgaoPesquisa           = $_POST['selOrgaoPesquisa'];
 
             $arrNumIdOrgaosSelecionados = [];
             if (PaginaSEI::getInstance()->recuperarCampo('selOrgaoPesquisa') != '') {
@@ -195,8 +201,6 @@ try {
             }
 
             $strSinRestringirOrgao = PaginaSEI::getInstance()->recuperarCampo('chkSinRestringirOrgao');
-
-            $strParticipanteSolr = '';
 
             //Opção de Auto Completar Interressado
             if (!$bolAutocompletarInterressado) {
@@ -207,6 +211,7 @@ try {
 
             $strDisplayAvancado = 'block';
             $bolPreencheuAvancado = false;
+            
             if (($strSinProcessos == 'P' || $strSinDocumentosGerados == 'G' || $strSinDocumentosRecebidos == 'R') &&
                 !InfraString::isBolVazia($strIdParticipante) ||
                 !InfraString::isBolVazia($strParticipanteSolr) ||
@@ -225,34 +230,53 @@ try {
 
                 $bolPreencheuAvancado = true;
             }
-
-            $q = PaginaSEIExterna::getInstance()->recuperarCampo('q');
+	
+            $objMdPesqParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
+            $objMdPesqParametroPesquisaDTO->setStrNome(MdPesqParametroPesquisaRN::$TA_CHAVE_CRIPTOGRAFIA);
+            $objMdPesqParametroPesquisaDTO->retTodos();
+            $objMdPesqParametroPesquisaDTO = (new MdPesqParametroPesquisaRN())->consultar($objMdPesqParametroPesquisaDTO);
+        
+            $parametrosSolr = [
+                'q'                             => $q,
+                'strDescricaoPesquisa'          => $strDescricaoPesquisa,
+                'strObservacaoPesquisa'         => $strObservacaoPesquisa,
+                'inicio'                        => $inicio,
+                'rowsSolr'                      => $rowsSolr,
+                'strParticipanteSolr'           => $strParticipanteSolr,
+                'md5Captcha'                    => null,
+                'id_orgao_acesso_externo'       => $id_orgao_acesso_externo,
+                'selOrgaoPesquisa'              => $selOrgaoPesquisa,
+                'strIdUnidade'                  => $strIdUnidade,
+                'numMaxResultados'              => 100,
+                'selTipoProcedimentoPesquisa'   => $numIdTipoProcedimento,
+                'selSeriePesquisa'              => $numIdSerie,
+                'txtDataInicio'                 => $strDataInicio,
+                'txtDataFim'                    => $strDataFim,
+                'strIdParticipante'             => $strIdParticipante
+            ];
 
             $inicio = intval($_REQUEST["inicio"]);
 
             $strResultado = '';
 
             if (isset($_POST['sbmPesquisar']) || ($_GET['acao_origem_externa'] == "protocolo_pesquisar_paginado")) {
-
-                $objMdPesqParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
-                $mdPesqParametroPesquisaRN = new MdPesqParametroPesquisaRN();
-                $objMdPesqParametroPesquisaDTO->setStrNome(MdPesqParametroPesquisaRN::$TA_CHAVE_CRIPTOGRAFIA);
-                $objMdPesqParametroPesquisaDTO->retTodos();
-                $objMdPesqParametroPesquisaDTO = $mdPesqParametroPesquisaRN->consultar($objMdPesqParametroPesquisaDTO);
-                if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
+	
+	            if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
+                    
                     if ($bolCaptcha == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']])) {
                         PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
                     } else {
                         //preencheu palavra de busca ou alguma opção avançada
                         if (!InfraString::isBolVazia($q) || $bolPreencheuAvancado) {
                             try {
-                                $strResultado = MdPesqBuscaProtocoloExterno::executar($q, $strDescricaoPesquisa, $strObservacaoPesquisa, $inicio, 100, $strParticipanteSolr, $md5Captcha);
+                                $strResultado = MdPesqBuscaProtocoloExterno::executar($parametrosSolr);
                             } catch (Exception $e) {
                                 LogSEI::getInstance()->gravar(InfraException::inspecionar($e));
                                 throw new InfraException('Erro realizando pesquisa.', $e);
                             }
                         }
                     }
+                    
                 } else {
                     PaginaSEIExterna::getInstance()->setStrMensagem('A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.', PaginaSEI::$TIPO_MSG_ERRO);
                 }
@@ -272,12 +296,8 @@ try {
     $strLinkAjaxUnidade = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=unidade_auto_completar_todas&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']);
 
     $strLinkAjuda = PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('md_pesq_ajuda_exibir_externo.php?acao_externa=pesquisa_publica_ajuda&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']));
-
-    if ($strStaData == '0') {
-        $strDisplayPeriodoExplicito = $strDisplayAvancado;
-    } else {
-        $strDisplayPeriodoExplicito = 'none';
-    }
+	
+	$strDisplayPeriodoExplicito = ($strStaData == '0') ? $strDisplayAvancado : 'none';
 
 } catch (Exception $e) {
     PaginaSEIExterna::getInstance()->processarExcecao($e);
@@ -577,6 +597,14 @@ PaginaSEIExterna::getInstance()->fecharJavaScript();
 PaginaSEIExterna::getInstance()->fecharHead();
 PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"');
 ?>
+    <!-- Aviso para quando o JavaScript estiver desabilitado -->
+    <noscript>
+<!--        <style> .js-required { display: none !important; } </style>-->
+        <div class="alert alert-warning mt-4" role="alert">
+            <strong>JavaScript desabilitado:</strong> Para que a pesquisa pública de documentos e processos funcione corretamente é necessário que o JavaScript esteja habilitado nas configurações de seu navegador. Habilite-o e recarregue a página.
+        </div>
+    </noscript>
+
     <form id="seiSearch" name="seiSearch" method="post" class="mb-5"
           action="<?= PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('md_pesq_processo_pesquisar.php?acao_externa=' . $_GET['acao_externa'] . '&acao_origem_externa=' . $_GET['acao_externa'] . $strParametros)) ?>">
 
@@ -613,12 +641,21 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                         <label id="lblPesquisarEm" accesskey="" class="infraLabelObrigatorio">Pesquisar em:</label>
                     </div>
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
-                        <input type="checkbox" id="chkSinProcessos" name="chkSinProcessos" value="P" class="infraCheckbox" <?= ($strSinProcessos == 'P' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
-							<label id="lblSinProcessos" for="chkSinProcessos" accesskey="" class="infraLabelCheckbox">Processos</label>
-                        <input type="checkbox" id="chkSinDocumentosGerados" name="chkSinDocumentosGerados" value="G" class="infraCheckbox" <?= ($strSinDocumentosGerados == 'G' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
-							<label id="lblSinDocumentosGerados" for="chkSinDocumentosGerados" accesskey="" class="infraLabelCheckbox">Documentos Gerados</label>
-                        <input type="checkbox" id="chkSinDocumentosRecebidos" name="chkSinDocumentosRecebidos" value="R" class="infraCheckbox" <?= ($strSinDocumentosRecebidos == 'R' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
-							<label id="lblSinDocumentosRecebidos" for="chkSinDocumentosRecebidos" accesskey="" class="infraLabelCheckbox">Documentos Externos</label>
+                        <label id="lblSinProcessos" for="chkSinProcessos" accesskey="" class="infraLabelCheckbox">
+                            <input type="checkbox" id="chkSinProcessos" name="chkSinProcessos" value="P" class="infraCheckbox" <?= ($strSinProcessos == 'P' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
+                            <noscript><input type="checkbox" id="chkSinProcessos" name="chkSinProcessos" value="P" class="" <?= ($strSinProcessos == 'P' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/></noscript>
+							Processos
+                        </label>
+                        <label id="lblSinDocumentosGerados" for="chkSinDocumentosGerados" accesskey="" class="infraLabelCheckbox">
+                            <input type="checkbox" id="chkSinDocumentosGerados" name="chkSinDocumentosGerados" value="G" class="infraCheckbox" <?= ($strSinDocumentosGerados == 'G' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
+                            <noscript><input type="checkbox" id="chkSinDocumentosGerados" name="chkSinDocumentosGerados" value="G" class="" <?= ($strSinDocumentosGerados == 'G' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/></noscript>
+							Documentos Gerados
+                        </label>
+                        <label id="lblSinDocumentosRecebidos" for="chkSinDocumentosRecebidos" accesskey="" class="infraLabelCheckbox">
+                            <input type="checkbox" id="chkSinDocumentosRecebidos" name="chkSinDocumentosRecebidos" value="R" class="infraCheckbox" <?= ($strSinDocumentosRecebidos == 'R' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/></noscript>
+                            <noscript><input type="checkbox" id="chkSinDocumentosRecebidos" name="chkSinDocumentosRecebidos" value="R" class="" <?= ($strSinDocumentosRecebidos == 'R' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/></noscript>
+							Documentos Externos
+                        </label>
                     </div>
                 </div>
                 <div class="row">
@@ -630,15 +667,15 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
 						<input type="hidden" id="hdnIdParticipante" name="hdnIdParticipante" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strIdParticipante) ?>"/>
                     </div>
                 </div>
-
-                <?php if(is_numeric($numOrgaos) && $numOrgaos > 1): ?>
+	
+	            <?php if(is_numeric($numOrgaos) && $numOrgaos > 1): ?>
                 <div class="row">
                     <div class="col-sm-12 col-md-4 col-lg-3 col-xl-3">
                         <label id="lblOrgaoPesquisa" for="selOrgaoPesquisa" accesskey="" class="infraLabelOpcional">Órgão Gerador:</label>
                     </div>
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
-                        <select style="display: none" multiple id="selOrgaoPesquisa" name="selOrgaoPesquisa[]" onchange="tratarSelecaoOrgao()" class="w-100 infraSelect multipleSelect" tabindex="<?=PaginaSEI::getInstance()->getProxTabDados()?>">
-                          <?=$strOptionsOrgaos;?>
+                        <select multiple id="selOrgaoPesquisa" name="selOrgaoPesquisa[]" onchange="tratarSelecaoOrgao()" class="w-100 infraSelect multipleSelect" tabindex="<?= PaginaSEI::getInstance()->getProxTabDados() ?>">
+                          <?= $strOptionsOrgaos; ?>
                         </select>
                     </div>
                 </div>
@@ -698,7 +735,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
             </div>
             <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                 <? if($bolCaptcha){ CaptchaSEI::getInstance()->montarHtml(PaginaSEIExterna::getInstance()->getProxTabDados()); } ?>
-                <div class="row">
+                <div class="row js-required">
                     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 mt-4 mt-sm-4 mt-xl-0 mt-lg-0 mt-md-0">
                         <input type="submit" id="sbmPesquisar" name="sbmPesquisar" value="Pesquisar" class="infraButton"/>
                         <input type="reset" id="sbmLimpar" name="sbmLimpar" value="Limpar" class="infraButton"/>
@@ -729,7 +766,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
 
     <div id="conteudo" class="retorno-ajax" style="width:99%;">
         <table border="0" class="pesquisaResultado">
-            <tbody></tbody>
+            <tbody><?= !empty($strResultado) ? $strResultado : '' ?></tbody>
         </table>
         <div class="ajax-loading" style="position: absolute; width: 97%; background: #F8F8F8; padding: 7px 10px 4px; text-align: center; display: none;">
             <div class="d-flex justify-content-center align-items-center">
