@@ -9,11 +9,11 @@ class PesquisaIntegracao extends SeiIntegracao {
 	
 	public function getVersao()
 	{
-		return '4.2.6';
+		return '4.3.0';
 	}
 	
 	
-	public function getPeticionamentoMenorVersaoRequerida()
+	public static function getPeticionamentoMenorVersaoRequerida()
 	{
 		return '4.0.2';
 	}

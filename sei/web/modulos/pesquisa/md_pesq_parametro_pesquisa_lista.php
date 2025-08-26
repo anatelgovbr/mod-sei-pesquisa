@@ -93,6 +93,10 @@ PaginaSEI::getInstance()->abrirStyle();
 ?>
     h6{font-weight: bold; margin-bottom: 0px !important; padding-top:10px}
     .infraImgModulo{width:20px;}
+
+    .form-group{
+        margin-bottom: 1rem;
+    }
 <?php
 PaginaSEI::getInstance()->fecharStyle();
 PaginaSEI::getInstance()->montarJavaScript();

@@ -5,10 +5,10 @@ class MdPesqAtualizadorSipRN extends InfraRN
 {
 
     private $numSeg = 0;
-    private $versaoAtualDesteModulo = '4.2.0';
+    private $versaoAtualDesteModulo = '4.3.0';
     private $nomeDesteModulo = 'MÓDULO DE PESQUISA PÚBLICA';
     private $nomeParametroModulo = 'VERSAO_MODULO_PESQUISA_PUBLICA';
-    private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1', '4.1.0', '4.2.0');
+    private $historicoVersoes = array('3.0.0', '4.0.0', '4.0.1', '4.1.0', '4.2.0','4.3.0');
 
     public function __construct()
     {
@@ -66,15 +66,6 @@ class MdPesqAtualizadorSipRN extends InfraRN
         die;
     }
 
-	protected function normalizaVersao($versao)
-    {
-		$ultimoPonto = strrpos($versao, '.');
-		if ($ultimoPonto !== false) {
-			$versao = substr($versao, 0, $ultimoPonto) . substr($versao, $ultimoPonto + 1);
-		}
-		return $versao;
-	}
-
     protected function atualizarVersaoConectado()
     {
         
@@ -90,7 +81,7 @@ class MdPesqAtualizadorSipRN extends InfraRN
             }
 
             //testando versao do framework
-            $numVersaoInfraRequerida = '2.29.0';
+            $numVersaoInfraRequerida = '2.37.1';
             if (version_compare(VERSAO_INFRA, $numVersaoInfraRequerida) < 0) {
                 $this->finalizar('VERSÃO DO FRAMEWORK PHP INCOMPATÍVEL (VERSÃO ATUAL ' . VERSAO_INFRA . ', SENDO REQUERIDA VERSÃO IGUAL OU SUPERIOR A ' . $numVersaoInfraRequerida . ')', true);
             }
@@ -119,6 +110,8 @@ class MdPesqAtualizadorSipRN extends InfraRN
                     $this->instalarv410();
 	            case '4.1.0':
 		            $this->instalarv420();
+                case '4.2.0':
+		            $this->instalarv430();
                     break;
 
                 default:
@@ -279,6 +272,15 @@ class MdPesqAtualizadorSipRN extends InfraRN
 	protected function instalarv420()
 	{
 		$nmVersao = '4.2.0';
+		
+		$this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
+		
+		$this->atualizarNumeroVersao($nmVersao);
+	}
+
+    protected function instalarv430()
+	{
+		$nmVersao = '4.3.0';
 		
 		$this->logar('EXECUTANDO A INSTALAÇÃO/ATUALIZAÇÃO DA VERSÃO '. $nmVersao .' DO ' . $this->nomeDesteModulo . ' NA BASE DO SIP');
 		

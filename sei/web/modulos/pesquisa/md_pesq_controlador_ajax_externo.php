@@ -155,13 +155,21 @@ try{
                             LogSEI::getInstance()->gravar(InfraException::inspecionar($e));
                             throw new InfraException('Erro realizando pesquisa.', $e);
                         }
+                    } else {
+                        $retorno['html'] = '<consultavazia>
+                                    <div class="sem-resultado">
+                                        <p class="alert alert-warning"> 
+                                            Informe parametros para pesquisa.
+                                        </p>
+                                    </div>
+                                 </consultavazia>';
                     }
                 }
             } else {
                 $retorno['html'] = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.</p></div></consultavazia>';
                 $retorno['itens'] = 0;
             }
-
+            
             $retorno['html'] = MdPesqBuscaProtocoloExterno::tratarHTML($retorno['html']);
             InfraAjax::enviarJSON(json_encode($retorno,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
 
