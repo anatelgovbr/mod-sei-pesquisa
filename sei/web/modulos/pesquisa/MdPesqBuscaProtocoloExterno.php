@@ -418,10 +418,16 @@ class MdPesqBuscaProtocoloExterno{
             $strProtocoloDocumento = "";
             if (empty($dados["protocolo_documento_formatado"]) == false) {
                 if ($objDocumentoDTO == null) {
-                    print_r($idProtocolo);
-                    echo ' ';
-                    print_r($dados["protocolo_documento_formatado"]);
-                    die;
+                    
+                    // TODO esse trecho remove registros que tem protocolo mas não tem o documento
+                    // faz quebrar a pesquisa ao inves de ignorar os registros defeituosos
+                    //
+                    // print_r($idProtocolo);
+                    // echo ' ';
+                    // print_r($dados["protocolo_documento_formatado"]);
+                    // die;
+
+                    continue;
                 }
                 $titulo .= " ";
                 if($isPublico){
