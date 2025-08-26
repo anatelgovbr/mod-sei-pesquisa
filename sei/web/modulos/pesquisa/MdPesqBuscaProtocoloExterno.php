@@ -15,7 +15,7 @@ class MdPesqBuscaProtocoloExterno{
 
     public static function executar($parametrosSolr)
     {
-
+        try {
         $q                        = $parametrosSolr['q'];
         $strDescricaoPesquisa     = $parametrosSolr['strDescricaoPesquisa'];
         $strObservacaoPesquisa    = $parametrosSolr['strObservacaoPesquisa'];
@@ -68,12 +68,12 @@ class MdPesqBuscaProtocoloExterno{
 
         // PESQUISAR EM PROCESSOS
         if (in_array("P", $checkbox)) {
-            array_push($grupo, "(sta_prot:P)");
+            array_push($grupo, "sta_prot:P");
         }
 
         // PESQUISAR EM DOCUMENTOS EXTERNOS (RECEBIDOS)
         if (in_array("R", $checkbox)) {
-            array_push($grupo, "(sta_prot:R)");
+            array_push($grupo, "sta_prot:R");
         }
 
         // PESQUISAR EM DOCUMENTOS INTERNOS (GERADOS)
@@ -164,13 +164,12 @@ class MdPesqBuscaProtocoloExterno{
         if (preg_match("/prot_pesq:\*(\w+)\*/", $parametros->q, $pesqProt)) {
             $pesquisaProtocolo = $pesqProt[1];
         }
-
+        
         $parametros->q = mb_convert_encoding($parametros->q, 'ISO-8859-1', 'UTF-8');
 
-        //MONTA URL DA BUSCA
-        $urlBusca = ConfiguracaoSEI::getInstance()->getValor('Solr', 'Servidor') . '/' . ConfiguracaoSEI::getInstance()->getValor('Solr', 'CoreProtocolos') . '/select?' . http_build_query($parametros) . '&hl=true&hl.snippets=2&hl.fl=content&hl.fragsize=100&hl.maxAnalyzedChars=1048576&hl.alternateField=content&hl.maxAlternateFieldLength=100&hl.maxClauseCount=2000&rows='.$numMaxResultados.'&fl=id,id_prot,id_proc,id_doc,id_tipo_proc,id_serie,id_anexo,id_uni_ger,prot_doc,prot_proc,numero,id_usu_ger,dta_ger,dta_inc,id_assin,sta_prot,desc';
+        //MONTA URL DA BUSCA       
+        $urlBusca   = SeiSolrUtil::obterUrlSolAuth() . '/' . ConfiguracaoSEI::getInstance()->getValor('Solr', 'CoreProtocolos') . '/select?' . http_build_query($parametros) . '&hl.method=original&hl=true&hl.snippets=2&hl.fl=content&hl.fragsize=100&hl.maxAnalyzedChars=1048576&hl.alternateField=content&hl.maxAlternateFieldLength=100&hl.maxClauseCount=2000&rows='.$numMaxResultados.'&fl=id,id_prot,id_proc,id_doc,id_tipo_proc,id_serie,id_anexo,id_uni_ger,prot_doc,prot_proc,numero,id_usu_ger,dta_ger,dta_inc,id_assin,sta_prot,desc';
         $resultados = file_get_contents($urlBusca, true);
-
         $termo = !empty($q) ? $q : $pesquisaProtocolo;
 
         if ($resultados == '') {
@@ -289,7 +288,7 @@ class MdPesqBuscaProtocoloExterno{
 
             }
 
-            // Protege contra a nÃ£o idexaÃ§Ã£o no solr quando o processo ou documento passa de pÃºblico para restrito ou quando o documento possui intimaÃ§Ãµes nÃ£o cumpridas:
+            // Protege contra a não idexação no solr quando o processo ou documento passa de público para restrito ou quando o documento possui intimações não cumpridas:
             if(!empty($objProtocoloDTO)){
                 $isProcesso     = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
                 $isDocumento    = $objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO;
@@ -362,7 +361,7 @@ class MdPesqBuscaProtocoloExterno{
                     $idProcedimento = $objDocumentoDTO->getDblIdProcedimento();
                     $dados["identificacao_protocolo"] = $objDocumentoDTO->getStrNomeSerie() . ' ' . $objDocumentoDTO->getStrNumero();
 
-                    // Esconde highlight se intimaÃ§Ã£o do documento ou anexos nÃ£o estiver cumprida:
+                    // Esconde highlight se intimação do documento ou anexos não estiver cumprida:
                     if( PesquisaIntegracao::verificaSeModPeticionamentoVersaoMinima() ){
                         $objMdPetIntCertidaoRN =  new MdPetIntCertidaoRN();
                         if( !$objMdPetIntCertidaoRN->verificaDocumentoEAnexoIntimacaoNaoCumprida( array($objDocumentoDTO->getDblIdDocumento(),false,false,true) ) ){
@@ -370,7 +369,7 @@ class MdPesqBuscaProtocoloExterno{
                         }
                     }
 
-                    // INCLUIDO 21/12/2015 Substitui data de geraÃ§Ã£o para data de assinatura de documentos gerados
+                    // INCLUIDO 21/12/2015 Substitui data de geração para data de assinatura de documentos gerados
                     if ($objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_DOCUMENTO_GERADO) {
                         $objAssinaturaDTO = new AssinaturaDTO();
                         $objAssinaturaDTO->setDblIdDocumento($idProtocolo);
@@ -419,16 +418,10 @@ class MdPesqBuscaProtocoloExterno{
             $strProtocoloDocumento = "";
             if (empty($dados["protocolo_documento_formatado"]) == false) {
                 if ($objDocumentoDTO == null) {
-
-                    // TODO esse trecho remove registros que tem protocolo mas não tem o documento
-                    // faz quebrar a pesquisa ao inves de ignorar os registros defeituosos
-                    //
-                    // print_r($idProtocolo);
-                    // echo ' ';
-                    // print_r($dados["protocolo_documento_formatado"]);
-                    // die;
-
-                    continue;
+                    print_r($idProtocolo);
+                    echo ' ';
+                    print_r($dados["protocolo_documento_formatado"]);
+                    die;
                 }
                 $titulo .= " ";
                 if($isPublico){
@@ -448,12 +441,12 @@ class MdPesqBuscaProtocoloExterno{
             $tituloCompleto .= "<img border=\"0\" src=\"../../svg/arvore.svg\" alt=\"Acessar\" title=\"Acessar\" class=\"arvore\" />";
             $tituloCompleto .= "</a>";
             $tituloCompleto .= $titulo;
-            // REMOVE TAGS DO TÃTULO
+            // REMOVE TAGS DO TÍTULO
             $tituloCompleto = preg_replace("/&lt;.*?&gt;/", "", $tituloCompleto);
             if ($objProtocoloDTO) {
                 if(!$isPublico && !$bolLinkMetadadosProcessoRestrito) {
 
-                    $titulo = $strNomeTipoProcedimento . " nÂº " . $dados["protocolo_processo_formatado"];
+                    $titulo = $strNomeTipoProcedimento . " nº " . $dados["protocolo_processo_formatado"];
                     if($objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO){
                         $titulo .= " (".trim($dados["identificacao_protocolo"]).")";
                     }
@@ -513,7 +506,20 @@ class MdPesqBuscaProtocoloExterno{
             }
         }
 
+        //NESSE CASO DEVE ATUALIZAR O RETORNO VAZIO DIZENDO EXISTEM MAIS REGISTROS PARA TENTAR RETORNAR
+        //OS REGISTROS DA PAGINA PODE TER SIDO REMOVIDOS DEVIDO A UMA REGRA DA INTIMAÇÃO NAO CUMPRIDA
+        if(count($registros) - $removidos == 0){
+            return ['itens' => $itens,'html'  => ''];
+        }
+
+        $pagLinksTop = MdPesqSolrUtilExterno::criarBarraNavegacao($itens, $inicio, 10, PaginaSEIExterna::getInstance(), SessaoSEIExterna::getInstance(), $md5Captcha, 'md_pesq_processo_pesquisar.php', 'top');
+        $pagLinksBottom = MdPesqSolrUtilExterno::criarBarraNavegacao($itens, $inicio, 10, PaginaSEIExterna::getInstance(), SessaoSEIExterna::getInstance(), $md5Captcha);
+
         return ['itens' => (int)$itens,'html'  => $html];
+
+        }catch (Exception $e){           
+            throw new InfraException($e->getMessage());
+        }
 
     }
 
@@ -524,7 +530,7 @@ class MdPesqBuscaProtocoloExterno{
         $semResultados .= "<ul>";
         $semResultados .= "<li>Certifique-se de que todas as palavras estejam escritas corretamente.</li>";
         $semResultados .= "<li>Tente palavras-chave diferentes.</li>";
-        $semResultados .= "<li>Tente palavras-chave mais genÃ©ricas.</li>";
+        $semResultados .= "<li>Tente palavras-chave mais genéricas.</li>";
         $semResultados .= "</ul>";
         $semResultados .= "</div>";
         $semResultados .= "</consultavazia>";

@@ -127,7 +127,6 @@ try {
 	$strResultadoCabecalho .= '<tr><td width="20%"><b>Data de Geração:</b></td><td>'.$objProcedimentoDTO->getDtaGeracaoProtocolo().'</td></tr>'."\n";
 	$strResultadoCabecalho .= '<tr><td width="20%"><b>Interessados:</b></td><td> '.$strInteressados.'</td></tr>'."\n";
 	$strResultadoCabecalho .= '</table>'."\n";
- 	
 
 	//$arrObjDocumentoDTO = InfraArray::indexarArrInfraDTO($objProcedimentoDTO->getArrObjDocumentoDTO(),'IdDocumento');
   $arrObjRelProtocoloProtocoloDTO = array();
@@ -802,7 +801,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo,'onload="inicializar();"')
 <? PaginaSEIExterna::getInstance()->montarBarraComandosSuperior($arrComandos);
 echo $strResultadoCabecalho;
 if($bolMensagemProcessoRestrito || $countDocsInDataCorte > 0){
-    echo '<p style="font-size: 1.2em; margin-top: 15px"> '.$txtDescricaoProcessoAcessoRestrito.'</p>';
+    echo '<p style="font-size: 1.2em;"> '.$txtDescricaoProcessoAcessoRestrito.'</p>';
 }
 PaginaSEIExterna::getInstance()->montarAreaTabela($strResultado,$numProtocolos);
 echo $strResultadoAndamentosFinal;

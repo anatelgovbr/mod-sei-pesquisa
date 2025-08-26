@@ -40,22 +40,22 @@ try {
     $arrObjOrgaoDTO = (new OrgaoRN())->listarRN1353($objOrgaoDTO);
 
     $numOrgaos = count($arrObjOrgaoDTO);
-	
+
 	if($numOrgaos > 1){
-		
+
 		$arrNumIdOrgao      = !empty($_POST['selOrgaoPesquisa']) && is_array($_POST['selOrgaoPesquisa']) ? array_map('trim', $_POST['selOrgaoPesquisa']) : [];
 		$strOptionsOrgaos   = '';
-		
+
 		foreach($arrObjOrgaoDTO as $objOrgaoDTO){
-		 
+
 			$strOptionsOrgaos .= '<option value="'.$objOrgaoDTO->getNumIdOrgao().'"';
 			if (count($arrNumIdOrgao) > 0 && in_array($objOrgaoDTO->getNumIdOrgao(), $arrNumIdOrgao)){
 				$strOptionsOrgaos .= ' selected="selected"';
 			}
 			$strOptionsOrgaos .= '>'.PaginaPublicacoes::tratarHTML($objOrgaoDTO->getStrSigla()).'</option>'."\n";
-			
+
 		}
-    
+
     }
 	// Final da montagem do multiple select de orgaos
 
@@ -85,7 +85,7 @@ try {
             PaginaSEIExterna::getInstance()->salvarCampo('chkSinProcessos', 'P');
 
         } else {
-	
+
 	        $arrNumIdOrgao = !empty($_POST['selOrgaoPesquisa']) && is_array($_POST['selOrgaoPesquisa']) ? array_map('trim', $_POST['selOrgaoPesquisa']) : [];
 
             PaginaSEIExterna::getInstance()->salvarCampo('selOrgaoPesquisa', implode(',',$arrNumIdOrgao));
@@ -187,7 +187,7 @@ try {
             $strSiglaUsuario3           = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario3');
             $strSiglaUsuario4           = PaginaSEIExterna::getInstance()->recuperarCampo('txtSiglaUsuario4');
             $strUsuarios                = PaginaSEIExterna::getInstance()->recuperarCampo('hdnSiglasUsuarios');
-	
+
             $strParticipanteSolr        = '';
             $q                          = $_POST['q'];
             $inicio                     = intval($_GET['inicio']);
@@ -211,7 +211,7 @@ try {
 
             $strDisplayAvancado = 'block';
             $bolPreencheuAvancado = false;
-            
+
             if (($strSinProcessos == 'P' || $strSinDocumentosGerados == 'G' || $strSinDocumentosRecebidos == 'R') &&
                 !InfraString::isBolVazia($strIdParticipante) ||
                 !InfraString::isBolVazia($strParticipanteSolr) ||
@@ -230,12 +230,12 @@ try {
 
                 $bolPreencheuAvancado = true;
             }
-	
+
             $objMdPesqParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
             $objMdPesqParametroPesquisaDTO->setStrNome(MdPesqParametroPesquisaRN::$TA_CHAVE_CRIPTOGRAFIA);
             $objMdPesqParametroPesquisaDTO->retTodos();
             $objMdPesqParametroPesquisaDTO = (new MdPesqParametroPesquisaRN())->consultar($objMdPesqParametroPesquisaDTO);
-        
+
             $parametrosSolr = [
                 'q'                             => $q,
                 'strDescricaoPesquisa'          => $strDescricaoPesquisa,
@@ -260,9 +260,9 @@ try {
             $strResultado = '';
 
             if (isset($_POST['sbmPesquisar']) || ($_GET['acao_origem_externa'] == "protocolo_pesquisar_paginado")) {
-	
+
 	            if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
-                    
+
                     if ($bolCaptcha == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']])) {
                         PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
                     } else {
@@ -274,9 +274,17 @@ try {
                                 LogSEI::getInstance()->gravar(InfraException::inspecionar($e));
                                 throw new InfraException('Erro realizando pesquisa.', $e);
                             }
+                        } else {
+                            $xml = '<consultavazia>
+                                        <div class="sem-resultado">
+                                            <p class="alert alert-warning"> 
+                                                Informe parametros para pesquisa.
+                                            </p>
+                                        </div>
+                                    </consultavazia>';
                         }
                     }
-                    
+
                 } else {
                     PaginaSEIExterna::getInstance()->setStrMensagem('A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.', PaginaSEI::$TIPO_MSG_ERRO);
                 }
@@ -296,7 +304,7 @@ try {
     $strLinkAjaxUnidade = SessaoSEIExterna::getInstance()->assinarLink('md_pesq_controlador_ajax_externo.php?acao_ajax_externo=unidade_auto_completar_todas&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']);
 
     $strLinkAjuda = PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('md_pesq_ajuda_exibir_externo.php?acao_externa=pesquisa_publica_ajuda&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']));
-	
+
 	$strDisplayPeriodoExplicito = ($strStaData == '0') ? $strDisplayAvancado : 'none';
 
 } catch (Exception $e) {
@@ -466,8 +474,7 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
         $('#divInfraAreaTelaD').on('scroll', function() {
             clearTimeout(timer);
             timer = setTimeout(function() {
-                const $div = $('#divInfraAreaTelaD');
-                if (Math.abs($div.prop('scrollHeight') - $div.scrollTop() - $div.height()) <= 1) {
+                if(($('#divInfraAreaTelaD').prop('scrollHeight') - $('#divInfraAreaTelaD').scrollTop()) <= Math.ceil($('#divInfraAreaTelaD').height()) && paginar) {
                     carregarProximaPagina();
                 }
             }, 500);
@@ -504,25 +511,23 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             <? endif; ?>
 
             $('.ajax-loading').show();
-            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio='+buscaInicio+'&rowsSolr='+rowsSolr, $('#seiSearch').serialize())
-              .done(function(data) {
-                if (data.itens > 0) {
+            let formData = $( this ).serialize();
+            let urlForm  = '<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio='+buscaInicio+'&rowsSolr='+rowsSolr;
+            $.post(urlForm, formData).done(function(data){
+                if( data.itens > 0){
                     $('.retorno-ajax > table > tbody:last-child').append(data.html);
                     buscaInicio += rowsSolr;
                 } else {
                     $('.retorno-ajax').append(data.html);
                 }
                 qtdeItens = data.itens;
-              })
-              .fail(function(xhr, status, error) {
+            }).fail( function( xhr, status, error ) {
                 console.error("Erro: " + status + " - " + error);
-              })
-              .always(function() {
+            }).always(function() {
                 $('.ajax-loading').hide();
                 updateCaptcha();
                 verificarRegistros();
-              });
-
+            });
         });
 
         $('body').on('reset', '#seiSearch', function(e){
@@ -537,6 +542,7 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             $('#txtInfraCaptcha').val('');
         }
 
+        // Função para carregar mais resultados
         function carregarProximaPagina(){
             $('.ajax-loading').show();
 
@@ -546,9 +552,8 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
                     consultaVazia = false;
                     if (data.itens > 0) {
                         $('.retorno-ajax > table > tbody:last-child').append(data.html);
-                        if(data.html == ''){
-                            consultaVazia = true;
-                        }
+                    } else {
+                        consultaVazia = true;
                     }
                     buscaInicio += rowsSolr;
                 })
@@ -587,7 +592,6 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
                     verificarRegistros();
                 });
         }
-
 
     });
 
@@ -678,7 +682,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                     </div>
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
                         <div class="input-group mb-0">
-                            <input type="text" id="q" name="q" class="infraText form-control" style="width: 85%"
+                            <input type="text" id="q" name="q" class="infraText form-control" style="width: 85%; margin-right: 2px;"
                                    value="<?= str_replace('\\', '', str_replace('"', '&quot;', PaginaSEIExterna::tratarHTML($strPalavrasPesquisa))) ?>" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
                             <a id="ancAjuda" href="<?= $strLinkAjuda ?>" target="janAjuda" title="Ajuda para Pesquisa" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>">
                                 <img src="<?= PaginaSEIExterna::getInstance()->getDiretorioSvgGlobal() ?>/ajuda.svg" class="infraImgModulo"/>
@@ -717,7 +721,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
 						<input type="hidden" id="hdnIdParticipante" name="hdnIdParticipante" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strIdParticipante) ?>"/>
                     </div>
                 </div>
-	
+
 	            <?php if(is_numeric($numOrgaos) && $numOrgaos > 1): ?>
                 <div class="row">
                     <div class="col-sm-12 col-md-4 col-lg-3 col-xl-3">
@@ -745,7 +749,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                         <label id="lblTipoProcedimentoPesquisa" for="selTipoProcedimentoPesquisa" accesskey="" class="infraLabelOpcional">Tipo do Processo:</label>
                     </div>
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
-                        <select id="selTipoProcedimentoPesquisa" name="selTipoProcedimentoPesquisa" class="infraSelect form-control" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>">
+                        <select id="selTipoProcedimentoPesquisa" name="selTipoProcedimentoPesquisa" class="infraSelect form-select" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>">
                             <?= $strItensSelTipoProcedimento ?>
                         </select>
                     </div>
@@ -755,7 +759,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
                         <label id="lblSeriePesquisa" for="selSeriePesquisa" accesskey="" class="infraLabelOpcional">Tipo do Documento:</label>
                     </div>
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
-						<select id="selSeriePesquisa" name="selSeriePesquisa" class="infraSelect form-control" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>">
+						<select id="selSeriePesquisa" name="selSeriePesquisa" class="infraSelect form-select" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>">
 							<?= $strItensSelSerie ?>
                         </select>
                     </div>
@@ -816,11 +820,11 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
 
     <div id="conteudo" class="retorno-ajax" style="width:99%;">
         <table border="0" class="pesquisaResultado">
-            <tbody><?= !empty($strResultado) ? $strResultado['html'] : '' ?></tbody>
+            <tbody><?= !empty($strResultado) ? $strResultado : '' ?></tbody>
         </table>
         <div class="ajax-loading" style="position: absolute; width: 97%; background: #F8F8F8; padding: 7px 10px 4px; text-align: center; display: none;">
             <div class="d-flex justify-content-center align-items-center">
-                <img src="../../../infra_css/svg/aguarde.svg" alt="">
+                <img src="../../../infra_css/svg/aguarde.svg" alt="" style="d-inline-block">
                 <span>Pesquisando...</span>
             </div>
         </div>
