@@ -451,6 +451,8 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
         var formChanged = false;
         var buscaInicio = 0;
         var rowsSolr    = 50;
+        var qtdeItens   = 0;
+        var consultaVazia = false;
 
         partialFields();
 
@@ -464,20 +466,9 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
         $('#divInfraAreaTelaD').on('scroll', function() {
             clearTimeout(timer);
             timer = setTimeout(function() {
-                if(($('#divInfraAreaTelaD').prop('scrollHeight') - $('#divInfraAreaTelaD').scrollTop()) <= Math.ceil($('#divInfraAreaTelaD').height()) && paginar) {
-                    $('.ajax-loading').show();
-                    $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=true&inicio='+buscaInicio+'&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
-                        if($(data).find('resultado').length > 0){
-                            $('.retorno-ajax > table > tbody:last-child').append($(data).find('resultado').html());
-                            buscaInicio += rowsSolr;
-                        }
-                        if($(data).find('consultavazia').length > 0){
-                            $('.total-registros-infinite').html('A pesquisa encontrou '+$('.retorno-ajax > table tbody tr.pesquisaTituloRegistro').length+' resultado(s).');
-                        }
-                    }).always(function() {
-                        $('.ajax-loading').hide();
-                        updateCaptcha();
-                    });
+                const $div = $('#divInfraAreaTelaD');
+                if (Math.abs($div.prop('scrollHeight') - $div.scrollTop() - $div.height()) <= 1) {
+                    carregarProximaPagina();
                 }
             }, 500);
         });
@@ -513,18 +504,25 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             <? endif; ?>
 
             $('.ajax-loading').show();
-            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio='+buscaInicio+'&rowsSolr='+rowsSolr, $('#seiSearch').serialize()).done(function(data){
-                if($(data).find('resultado').length > 0){
-                    $('.retorno-ajax > table > tbody:last-child').append($(data).find('resultado').html());
+            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio='+buscaInicio+'&rowsSolr='+rowsSolr, $('#seiSearch').serialize())
+              .done(function(data) {
+                if (data.itens > 0) {
+                    $('.retorno-ajax > table > tbody:last-child').append(data.html);
                     buscaInicio += rowsSolr;
+                } else {
+                    $('.retorno-ajax').append(data.html);
                 }
-                if($(data).find('consultavazia').length > 0){
-                    $('.retorno-ajax').append($(data).find('consultavazia').html());
-                }
-            }).always(function() {
+                qtdeItens = data.itens;
+              })
+              .fail(function(xhr, status, error) {
+                console.error("Erro: " + status + " - " + error);
+              })
+              .always(function() {
                 $('.ajax-loading').hide();
                 updateCaptcha();
-            });
+                verificarRegistros();
+              });
+
         });
 
         $('body').on('reset', '#seiSearch', function(e){
@@ -538,6 +536,58 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             $('#infraImgRecarregarCaptcha').trigger('click');
             $('#txtInfraCaptcha').val('');
         }
+
+        function carregarProximaPagina(){
+            $('.ajax-loading').show();
+
+            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=true&inicio=' + buscaInicio + '&rowsSolr=' + rowsSolr, $('#seiSearch').serialize())
+                .done(function(data){
+                    const $data = $(data);
+                    consultaVazia = false;
+                    if (data.itens > 0) {
+                        $('.retorno-ajax > table > tbody:last-child').append(data.html);
+                        if(data.html == ''){
+                            consultaVazia = true;
+                        }
+                    }
+                    buscaInicio += rowsSolr;
+                })
+                .always(function() {
+                    $('.ajax-loading').hide();
+                    updateCaptcha();
+                    if(consultaVazia && buscaInicio < qtdeItens){
+                        carregarProximaPagina();
+                    }
+                });
+        }
+
+        function verificarRegistros(){
+            var totalTela = $('table tbody tr.pesquisaTituloRegistro').length;
+
+            if(totalTela < 10 && buscaInicio < qtdeItens){
+                carregarProximaPaginaInicial(); // chama apenas se realmente precisar
+            }
+        }
+
+        // Função para carregar mais resultados
+        function carregarProximaPaginaInicial(){
+            $('.ajax-loading').show();
+
+            $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=true&inicio=' + buscaInicio + '&rowsSolr=' + rowsSolr, $('#seiSearch').serialize())
+                .done(function(data){
+                    const $data = $(data);
+                    if (data.itens > 0) {
+                        $('.retorno-ajax > table > tbody:last-child').append(data.html);
+                    }
+                    buscaInicio += rowsSolr;
+                })
+                .always(function() {
+                    $('.ajax-loading').hide();
+                    updateCaptcha();
+                    verificarRegistros();
+                });
+        }
+
 
     });
 
@@ -766,11 +816,11 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
 
     <div id="conteudo" class="retorno-ajax" style="width:99%;">
         <table border="0" class="pesquisaResultado">
-            <tbody><?= !empty($strResultado) ? $strResultado : '' ?></tbody>
+            <tbody><?= !empty($strResultado) ? $strResultado['html'] : '' ?></tbody>
         </table>
         <div class="ajax-loading" style="position: absolute; width: 97%; background: #F8F8F8; padding: 7px 10px 4px; text-align: center; display: none;">
             <div class="d-flex justify-content-center align-items-center">
-                <img src="../../../infra_css/svg/aguarde.svg" alt="" style="d-inline-block">
+                <img src="../../../infra_css/svg/aguarde.svg" alt="">
                 <span>Pesquisando...</span>
             </div>
         </div>
