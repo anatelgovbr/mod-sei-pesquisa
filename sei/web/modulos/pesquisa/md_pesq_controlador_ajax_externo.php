@@ -39,11 +39,13 @@ try{
 			$objContatoRN = new ContatoRN();
 			$arrObjContatoDTO = $objContatoRN->pesquisarRN0471($objContatoDTO);
 			$xml = InfraAjax::gerarXMLItensArrInfraDTO($arrObjContatoDTO,'IdContato', 'Nome');
+            InfraAjax::enviarXML($xml);
 			break;
 			
 		case 'unidade_auto_completar_todas':
 			$arrObjUnidadeDTO = UnidadeINT::autoCompletarUnidades($_POST['palavras_pesquisa'],true,$_POST['id_orgao']);
 			$xml = InfraAjax::gerarXMLItensArrInfraDTO($arrObjUnidadeDTO,'IdUnidade', 'Sigla');
+            InfraAjax::enviarXML($xml);
 			break;
 
         case 'protocolo_pesquisar':
@@ -143,11 +145,12 @@ try{
 
             if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
                 if ($bolCaptcha == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']]) && $_GET['isPaginacao'] == 'false') {
-                    $xml = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">Código de confirmação inválido 1.</p></div></consultavazia>';
+                    $retorno['html'] = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">Código de confirmação inválido 1.</p></div></consultavazia>';
+                    $retorno['itens'] = 0;
                 } else {
                     if (!InfraString::isBolVazia($q) || $bolPreencheuAvancado) {
                         try {
-                            $xml = MdPesqBuscaProtocoloExterno::executar($parametrosSolr);
+                            $retorno = MdPesqBuscaProtocoloExterno::executar($parametrosSolr);
                         } catch (Exception $e) {
                             LogSEI::getInstance()->gravar(InfraException::inspecionar($e));
                             throw new InfraException('Erro realizando pesquisa.', $e);
@@ -155,17 +158,19 @@ try{
                     }
                 }
             } else {
-                $xml = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.</p></div></consultavazia>';
+                $retorno['html'] = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.</p></div></consultavazia>';
+                $retorno['itens'] = 0;
             }
+
+            $retorno['html'] = MdPesqBuscaProtocoloExterno::tratarHTML($retorno['html']);
+            InfraAjax::enviarJSON(json_encode($retorno,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
+
             break;
 		
 		default:
 			throw new InfraException("Ação '".$_GET['acao_ajax_externo']."' não reconhecida pelo controlador AJAX externo.");
 	}
 
-InfraAjax::enviarXML($xml);
-
 }catch(Exception $e){
-	//LogSEI::getInstance()->gravar('ERRO AJAX: '.$e->__toString());
 	InfraAjax::processarExcecao($e);
 }

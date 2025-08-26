@@ -165,7 +165,7 @@ class MdPesqBuscaProtocoloExterno{
             $pesquisaProtocolo = $pesqProt[1];
         }
 
-        $parametros->q = utf8_encode($parametros->q);
+        $parametros->q = mb_convert_encoding($parametros->q, 'ISO-8859-1', 'UTF-8');
 
         //MONTA URL DA BUSCA
         $urlBusca = ConfiguracaoSEI::getInstance()->getValor('Solr', 'Servidor') . '/' . ConfiguracaoSEI::getInstance()->getValor('Solr', 'CoreProtocolos') . '/select?' . http_build_query($parametros) . '&hl=true&hl.snippets=2&hl.fl=content&hl.fragsize=100&hl.maxAnalyzedChars=1048576&hl.alternateField=content&hl.maxAlternateFieldLength=100&hl.maxClauseCount=2000&rows='.$numMaxResultados.'&fl=id,id_prot,id_proc,id_doc,id_tipo_proc,id_serie,id_anexo,id_uni_ger,prot_doc,prot_proc,numero,id_usu_ger,dta_ger,dta_inc,id_assin,sta_prot,desc';
@@ -173,33 +173,23 @@ class MdPesqBuscaProtocoloExterno{
 
         $termo = !empty($q) ? $q : $pesquisaProtocolo;
 
-        $semResultados = "<consultavazia>";
-        $semResultados .= "<div class=\"sem-resultado\">Sua pesquisa pelo termo <b>" .$termo. "</b> não encontrou nenhum protocolo correspondente. <br/><br/>Sugestões:";
-        $semResultados .= "<ul>";
-        $semResultados .= "<li>Certifique-se de que todas as palavras estejam escritas corretamente.</li>";
-        $semResultados .= "<li>Tente palavras-chave diferentes.</li>";
-        $semResultados .= "<li>Tente palavras-chave mais genéricas.</li>";
-        $semResultados .= "</ul>";
-        $semResultados .= "</div>";
-        $semResultados .= "</consultavazia>";
-
         if ($resultados == '') {
-            return $semResultados;
+            return self::retornoVazio($termo);
         }
 
         $xml = simplexml_load_string($resultados);
 
-        $arrRet = $xml->xpath('/response/result/@numFound');
-        $itens = array_shift($arrRet);
+        $arr = $xml->xpath('/response/result/@numFound');
+        $itens = $arr ? (int)$arr[0] : 0; 
 
         if($itens == 0){
-            return $semResultados;
+            return self::retornoVazio($termo);
         }
 
         $registros = $xml->xpath('/response/result/doc');
 
         if(count($registros) == 0){
-            return $semResultados;
+            return self::retornoVazio($termo);
         }
 
         $html = '';
@@ -299,7 +289,7 @@ class MdPesqBuscaProtocoloExterno{
 
             }
 
-            // Protege contra a não idexação no solr quando o processo ou documento passa de público para restrito ou quando o documento possui intimações não cumpridas:
+            // Protege contra a nÃ£o idexaÃ§Ã£o no solr quando o processo ou documento passa de pÃºblico para restrito ou quando o documento possui intimaÃ§Ãµes nÃ£o cumpridas:
             if(!empty($objProtocoloDTO)){
                 $isProcesso     = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
                 $isDocumento    = $objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO;
@@ -352,19 +342,16 @@ class MdPesqBuscaProtocoloExterno{
 
             // SNIPPET
             $numId = $registros[$i]->xpath("str[@name='id']");
-            $numId = utf8_decode($numId[0]);
+            $numId = mb_convert_encoding($numId[0], 'ISO-8859-1', 'UTF-8');
             $temp = $xml->xpath("/response/lst[@name='highlighting']/lst[@name='" . $numId . "']/arr[@name='content']/str");
             $snippet = '';
 
             for ($j = 0; $j < count($temp); $j++) {
-                $snippetTemp = utf8_decode($temp[$j]);
-                $snippetTemp = preg_replace('#<style(.*?)</style>.*?<script(.*?)</script>#is', '', $snippetTemp);
-                $snippetTemp = strtoupper(trim(strip_tags($snippetTemp))) == "NULL" ? null : $snippetTemp;
-                $snippetTemp = preg_replace("/\s+/", " ", $snippetTemp); // Espacos duplos
+                $snippetTemp = InfraString::fromUTF8($temp[$j]);
+                $snippetTemp = strtoupper(trim(strip_tags($snippetTemp))) === "NULL" ? null : $snippetTemp;
                 $snippetTemp = preg_replace("/<br>/i", "<br />", $snippetTemp);
                 $snippetTemp = preg_replace("/&lt;.*?&gt;/", "", $snippetTemp);
-                $snippetTemp = preg_replace('/<[^>]+>/', '', $snippetTemp);
-                $snippet .= $snippetTemp . '<b>...</b>';
+                $snippet .= trim($snippetTemp).'<b>&nbsp;&nbsp;...&nbsp;&nbsp;</b>';
             }
 
             $idProcedimento = '';
@@ -375,7 +362,7 @@ class MdPesqBuscaProtocoloExterno{
                     $idProcedimento = $objDocumentoDTO->getDblIdProcedimento();
                     $dados["identificacao_protocolo"] = $objDocumentoDTO->getStrNomeSerie() . ' ' . $objDocumentoDTO->getStrNumero();
 
-                    // Esconde highlight se intimação do documento ou anexos não estiver cumprida:
+                    // Esconde highlight se intimaÃ§Ã£o do documento ou anexos nÃ£o estiver cumprida:
                     if( PesquisaIntegracao::verificaSeModPeticionamentoVersaoMinima() ){
                         $objMdPetIntCertidaoRN =  new MdPetIntCertidaoRN();
                         if( !$objMdPetIntCertidaoRN->verificaDocumentoEAnexoIntimacaoNaoCumprida( array($objDocumentoDTO->getDblIdDocumento(),false,false,true) ) ){
@@ -383,7 +370,7 @@ class MdPesqBuscaProtocoloExterno{
                         }
                     }
 
-                    // INCLUIDO 21/12/2015 Substitui data de geração para data de assinatura de documentos gerados
+                    // INCLUIDO 21/12/2015 Substitui data de geraÃ§Ã£o para data de assinatura de documentos gerados
                     if ($objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_DOCUMENTO_GERADO) {
                         $objAssinaturaDTO = new AssinaturaDTO();
                         $objAssinaturaDTO->setDblIdDocumento($idProtocolo);
@@ -432,10 +419,16 @@ class MdPesqBuscaProtocoloExterno{
             $strProtocoloDocumento = "";
             if (empty($dados["protocolo_documento_formatado"]) == false) {
                 if ($objDocumentoDTO == null) {
-                    print_r($idProtocolo);
-                    echo ' ';
-                    print_r($dados["protocolo_documento_formatado"]);
-                    die;
+
+                    // TODO esse trecho remove registros que tem protocolo mas não tem o documento
+                    // faz quebrar a pesquisa ao inves de ignorar os registros defeituosos
+                    //
+                    // print_r($idProtocolo);
+                    // echo ' ';
+                    // print_r($dados["protocolo_documento_formatado"]);
+                    // die;
+
+                    continue;
                 }
                 $titulo .= " ";
                 if($isPublico){
@@ -452,20 +445,20 @@ class MdPesqBuscaProtocoloExterno{
                 }
             }
             $tituloCompleto = "<a href=\"" . PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink(MdPesqSolrUtilExterno::prepararUrl($arvore))) . "\" title=\"Acessar\" target=\"_blank\" class=\"arvore\"  onClick=\"infraLimparFormatarTrAcessada(this.parentNode.parentNode);\">";
-            $tituloCompleto .= "<img border=\"0\" src=\"imagens/arvore.svg\" alt=\"Acessar\" title=\"Acessar\" class=\"arvore\" />";
+            $tituloCompleto .= "<img border=\"0\" src=\"../../svg/arvore.svg\" alt=\"Acessar\" title=\"Acessar\" class=\"arvore\" />";
             $tituloCompleto .= "</a>";
             $tituloCompleto .= $titulo;
-            // REMOVE TAGS DO TÍTULO
+            // REMOVE TAGS DO TÃTULO
             $tituloCompleto = preg_replace("/&lt;.*?&gt;/", "", $tituloCompleto);
             if ($objProtocoloDTO) {
                 if(!$isPublico && !$bolLinkMetadadosProcessoRestrito) {
 
-                    $titulo = $strNomeTipoProcedimento . " nº " . $dados["protocolo_processo_formatado"];
+                    $titulo = $strNomeTipoProcedimento . " nÂº " . $dados["protocolo_processo_formatado"];
                     if($objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO){
                         $titulo .= " (".trim($dados["identificacao_protocolo"]).")";
                     }
                     $strProtocoloDocumento = $dados["protocolo_documento_formatado"];
-                    $tituloCompleto = "<img border=\"0\" src=\"imagens/arvore.svg\" title=\"Acessar\" class=\"arvore\" />";
+                    $tituloCompleto = "<img border=\"0\" src=\"../../svg/arvore.svg\" title=\"Acessar\" class=\"arvore\" />";
                     $tituloCompleto .= $titulo;
 
                     $objHipoteseLegalDTO = new HipoteseLegalDTO();
@@ -520,15 +513,32 @@ class MdPesqBuscaProtocoloExterno{
             }
         }
 
-        if(count($registros) - $removidos == 0){
-            return $semResultados;
-        }
+        return ['itens' => (int)$itens,'html'  => $html];
 
-        $pagLinksTop = MdPesqSolrUtilExterno::criarBarraNavegacao($itens, $inicio, 10, PaginaSEIExterna::getInstance(), SessaoSEIExterna::getInstance(), $md5Captcha, 'md_pesq_processo_pesquisar.php', 'top');
-        $pagLinksBottom = MdPesqSolrUtilExterno::criarBarraNavegacao($itens, $inicio, 10, PaginaSEIExterna::getInstance(), SessaoSEIExterna::getInstance(), $md5Captcha);
+    }
 
-        return '<resultado itens="'.$itens.'" urlsolar="">'.$html.'</resultado>';
+    private static function retornoVazio($termo)
+    {
+        $semResultados = "<consultavazia>";
+        $semResultados .= "<div class=\"sem-resultado\">Sua pesquisa pelo termo <b>" .$termo. "</b> não encontrou nenhum protocolo correspondente. <br/><br/>Sugestões:";
+        $semResultados .= "<ul>";
+        $semResultados .= "<li>Certifique-se de que todas as palavras estejam escritas corretamente.</li>";
+        $semResultados .= "<li>Tente palavras-chave diferentes.</li>";
+        $semResultados .= "<li>Tente palavras-chave mais genÃ©ricas.</li>";
+        $semResultados .= "</ul>";
+        $semResultados .= "</div>";
+        $semResultados .= "</consultavazia>";
 
+        return ['itens' => 0,'html'  => $semResultados];
+    
+    }
+
+    public static function tratarHTML(?string $s): string {
+        if ($s === null) return '';
+        $enc = mb_detect_encoding($s, ['UTF-8','ISO-8859-1','Windows-1252'], true);
+        if ($enc !== 'UTF-8') $s = mb_convert_encoding($s, 'UTF-8', $enc ?: 'UTF-8');
+        $s = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $s);
+        return $s;
     }
 
 }

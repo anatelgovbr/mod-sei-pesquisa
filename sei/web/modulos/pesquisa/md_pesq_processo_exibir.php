@@ -122,11 +122,10 @@ try {
 	
 	$strResultadoCabecalho = '';
 	$strResultadoCabecalho .= '<table id="tblCabecalho" width="99.3%" class="infraTable" summary="Cabeçalho de Processo" >'."\n";
-	$strResultadoCabecalho .= '<tr><th class="infraTh" colspan="2">Autuação</th></tr>'."\n";
-	$strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Processo:</td><td>'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().$strHipoteseLegal.'</td></tr>'."\n";
-	$strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Tipo:</td><td>'.PaginaSEIExterna::getInstance()->formatarXHTML($objProcedimentoDTO->getStrNomeTipoProcedimento()).'</td></tr>'."\n";
-	$strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Data de Geração:</td><td>'.$objProcedimentoDTO->getDtaGeracaoProtocolo().'</td></tr>'."\n";
-	$strResultadoCabecalho .= '<tr class="infraTrClara"><td width="20%">Interessados:</td><td> '.$strInteressados.'</td></tr>'."\n";
+	$strResultadoCabecalho .= '<tr><td width="20%"><b>Processo:</b></td><td>'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().$strHipoteseLegal.'</td></tr>'."\n";
+	$strResultadoCabecalho .= '<tr><td width="20%"><b>Tipo:</b></td><td>'.PaginaSEIExterna::getInstance()->formatarXHTML($objProcedimentoDTO->getStrNomeTipoProcedimento()).'</td></tr>'."\n";
+	$strResultadoCabecalho .= '<tr><td width="20%"><b>Data de Geração:</b></td><td>'.$objProcedimentoDTO->getDtaGeracaoProtocolo().'</td></tr>'."\n";
+	$strResultadoCabecalho .= '<tr><td width="20%"><b>Interessados:</b></td><td> '.$strInteressados.'</td></tr>'."\n";
 	$strResultadoCabecalho .= '</table>'."\n";
  	
 
@@ -747,6 +746,16 @@ div:has(> #lnkInfraSairSistema) {
 
 span.retiraAncoraPadraoAzul{font-size: .875rem;}
 
+#tblCabecalho{
+  border-collapse:separate;
+  border-radius:.375rem;
+}
+
+#tblCabecalho td{
+  border-top:0;
+  padding: .25rem .5rem;
+}
+
 <?
 PaginaSEIExterna::getInstance()->fecharStyle();
 PaginaSEIExterna::getInstance()->montarJavaScript();
@@ -793,7 +802,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo,'onload="inicializar();"')
 <? PaginaSEIExterna::getInstance()->montarBarraComandosSuperior($arrComandos);
 echo $strResultadoCabecalho;
 if($bolMensagemProcessoRestrito || $countDocsInDataCorte > 0){
-    echo '<p style="font-size: 1.2em;"> '.$txtDescricaoProcessoAcessoRestrito.'</p>';
+    echo '<p style="font-size: 1.2em; margin-top: 15px"> '.$txtDescricaoProcessoAcessoRestrito.'</p>';
 }
 PaginaSEIExterna::getInstance()->montarAreaTabela($strResultado,$numProtocolos);
 echo $strResultadoAndamentosFinal;
