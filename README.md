@@ -53,6 +53,17 @@
 	- Nesse cenário, no acesso ao processo, ao lado do protocolo do documento constará o ícone de uma chave azul indicando a situação de restrição provisória em razão de necessidade de reclassificação de nível de acesso.
 5. Os tipos de Andamentos listados quando é aberto um processo pela Pesquisa Pública é parametrizável no mesmo local que administra a lista de Andamentos visíveis para Acesso Externo do SEI, pelo menu Administração > Histórico, marcando ou desmarcando a coluna "Resumido".
 6. A partir da versão 4.1.2 do módulo foram eliminados quatro parâmetros na Administração que ocultavam metadados sobre o processo, o que seria contrário à LAI. O teor de documentos restritos nunca é pesquisável e acessado e a listagem em si dos Protocolos constantes no processo e dos Andamentos ocorridos no processo não é informação restrita que possa ser ocultada.
+7. O módulo possui dois parâmetros de configuração no menu do SEI Infra > Parâmetros:
+- MODULO_PESQUISA_PUBLICA_BLOQUEAR_CONCLUIR_PROCESSO_COM_DOCUMENTO_RESTRITO_USANDO_HIPOTESE_LEGAL:
+	- Apresenta crítica para impedir a última conclusão de processo que contenha qualquer documento com nível de acesso Restrito utilizando Hipóteses Legais dos IDs de hipóteses inseridas no parâmetro.
+	- Indicar apenas os IDs de interesse, conforme constam no SEI em Administração > Hipóteses Legais.
+	- Indicar números inteiros correspondentes aos IDs das hipóteses de interesse, separados por vírgula.
+	- É comum indicar os IDs das hipóteses "Documento Preparatório" e "Protocolo Pendente de Análise de Restrição", pois é uma situação inadequada um processo ser 100% concluído com essas hipóteses legais de restrição.
+- MODULO_PESQUISA_PUBLICA_BLOQUEAR_BLOQUEAR_PROCESSO_COM_DOCUMENTO_RESTRITO_USANDO_HIPOTESE_LEGAL:
+	- Apresenta crítica para impedir o bloqueio de processo que contenha qualquer documento com nível de acesso Restrito utilizando Hipóteses Legais dos IDs de hipóteses inseridas no parâmetro.
+ 	- O bloqueio de processo é, por exemplo, utilizado pelo Tramita.Gov depois que um processo é tramitado para outro órgão. Assim, o parâmetro pode impedir a tramitação de processos que contenham documentos restritos utilizando determinadas hipóteses legais, como "Documento Prepatório".
+ 	- Indicar apenas os IDs de interesse, conforme constam no SEI em Administração > Hipóteses Legais.
+ 	- Indicar números inteiros correspondentes aos IDs das hipóteses de interesse, separados por vírgula.
 
 ## Erros ou Sugestões
 1. [Abrir Issue](https://github.com/anatelgovbr/mod-sei-pesquisa/issues) no repositório do GitHub do módulo se ocorrer erro na execução dos scripts de banco do módulo no SEI ou no SIP acima.
