@@ -9,7 +9,7 @@ class PesquisaIntegracao extends SeiIntegracao {
 	
 	public function getVersao()
 	{
-		return '4.3.0';
+		return '4.3.1';
 	}
 	
 	
@@ -172,6 +172,59 @@ class PesquisaIntegracao extends SeiIntegracao {
 		return $objRelProtocoloProtocoloDTO;
 	}
 	
+	/**
+	 * Lista processos anexados ao processo principal
+	 * @param $idProcedimento
+	 * @return mixed
+	 * @throws InfraException
+	 */
+	public function listarProcessosAnexadores($idProcedimento)
+	{
+		if (!isset($idProcedimento)) {
+			throw new InfraException('Parâmetro $idProcedimento não informado.');
+		}
+		
+		$objRelProtocoloProtocoloDTO = new RelProtocoloProtocoloDTO();
+		$objRelProtocoloProtocoloDTO->retDblIdProtocolo2($idProcedimento);
+		$objRelProtocoloProtocoloDTO->setDblIdProtocolo1();
+		$objRelProtocoloProtocoloDTO->setStrStaAssociacao(RelProtocoloProtocoloRN::$TA_PROCEDIMENTO_ANEXADO);
+		$objRelProtocoloProtocoloDTO = (new RelProtocoloProtocoloRN())->listarRN0187($objRelProtocoloProtocoloDTO);
+		
+		return $objRelProtocoloProtocoloDTO;
+	}
+
+	public static function isAnexadoAProcessoRestrito($idProcedimento){
+
+		$anexoDeRestrito = false;
+
+		// Verifica se o Processo pai do Protocolo está anexado a Processo Restrito:
+		$objRelProtocoloProtocoloDTO = new RelProtocoloProtocoloDTO();
+		$objRelProtocoloProtocoloDTO->retDblIdProtocolo1();
+		$objRelProtocoloProtocoloDTO->setDblIdProtocolo2($idProcedimento);
+		$objRelProtocoloProtocoloDTO->setStrStaAssociacao(RelProtocoloProtocoloRN::$TA_PROCEDIMENTO_ANEXADO);
+		$listaProcessosAnexadores = (new RelProtocoloProtocoloRN())->listarRN0187($objRelProtocoloProtocoloDTO);
+
+		if (!empty($listaProcessosAnexadores)) {
+			
+			foreach ($listaProcessosAnexadores as $processoAnexador) {
+				
+				$objProtocoloDTO = new ProtocoloDTO();
+				$objProtocoloDTO->setDblIdProtocolo($processoAnexador->getDblIdProtocolo1());
+				$objProtocoloDTO->retStrStaNivelAcessoGlobal();
+				$objProtocoloDTO->retStrStaNivelAcessoLocal();
+				$objProcessoAnexador = (new ProtocoloRN())->consultarRN0186($objProtocoloDTO);
+
+				if(!empty($objProcessoAnexador) && in_array($objProcessoAnexador->getStrStaNivelAcessoGlobal(), [ProtocoloRN::$NA_RESTRITO])){
+					$anexoDeRestrito = true;
+				}
+
+			}
+
+		}
+
+		return $anexoDeRestrito;
+	}
+	
 	public function validaProcessoAnexo($idProcedimento, $arrValor)
 	{
 		$lista = '';
@@ -185,7 +238,7 @@ class PesquisaIntegracao extends SeiIntegracao {
 		$objProcedimentoDTO->retNumIdHipoteseLegalProtocolo();
 		$objProcedimentoDTO = $objProcedimentoRN->consultarRN0201($objProcedimentoDTO);
 		
-		if ($objProcedimentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_RESTRITO) {
+		if (in_array($objProcedimentoDTO->getStrStaNivelAcessoLocalProtocolo(), [ProtocoloRN::$NA_RESTRITO])) {
 			if (in_array($objProcedimentoDTO->getNumIdHipoteseLegalProtocolo(), $arrValor)) {
 				$objHipotesePrincipalRN = new HipoteseLegalRN();
 				$objHipotesePrincipalDTO = new HipoteseLegalDTO();
@@ -335,17 +388,28 @@ class PesquisaIntegracao extends SeiIntegracao {
 				if ($listaProcessosAnexado) {
 					$listaDocProcessoAnexo2 = '';
 					foreach ($listaProcessosAnexado as $processoAnexado) {
-						$documentosAnexados = self::listarDocumentos($processoAnexado->getDblIdProtocolo2());
-						if ($documentosAnexados) {
-							$listaDocProcessoAnexo2 = self::verificaDocumentoRestrito($documentos, $arrValor);
+						$documentos2 = self::listarDocumentos($processoAnexado->getDblIdProtocolo2());
+						if ($documentos2) {
+							$listaDocProcessoAnexo2 = self::verificaDocumentoRestrito($documentos2, $arrValor);
+						}
+					}
+				}
+				
+				$listaProcessosAnexadores = self::listarProcessosAnexadores($listaProcessos[0]->getDblIdProtocolo2());
+				if ($listaProcessosAnexadores) {
+					$listaDocProcessoAnexo3 = '';
+					foreach ($listaProcessosAnexadores as $processoAnexador) {
+						$documentos3 = self::listarDocumentos($processoAnexador->getDblIdProtocolo2());
+						if ($documentos3) {
+							$listaDocProcessoAnexo3 = self::verificaDocumentoRestrito($documentos3, $arrValor);
 						}
 					}
 				}
 				
 			}
 			
-			if (!empty($listaDocumentos.$listaDocProcessoAnexo.$listaDocProcessoAnexo2.$listaMsgProcesso)) {
-				$msg = "Não é possível bloquear o processo n ".$objPrcPrincipalDTO->getStrProtocoloProcedimentoFormatado().", pois nele ou em processo anexado ainda constam documentos com Nível de Acesso Restrito usando as Hipóteses Legais abaixo: \n\n" . $listaDocumentos.$listaDocProcessoAnexo.$listaDocProcessoAnexo2.$listaMsgProcesso;
+			if (!empty($listaDocumentos.$listaDocProcessoAnexo.$listaDocProcessoAnexo2.$listaDocProcessoAnexo3.$listaMsgProcesso)) {
+				$msg = "Não é possível bloquear o processo n ".$objPrcPrincipalDTO->getStrProtocoloProcedimentoFormatado().", pois nele ou em processo anexado/anexador ainda constam documentos com Nível de Acesso Restrito usando as Hipóteses Legais abaixo: \n\n" . $listaDocumentos.$listaDocProcessoAnexo.$listaDocProcessoAnexo2.$listaMsgProcesso;
 				$objInfraException = new InfraException();
 				$objInfraException->lancarValidacao($msg);
 			}

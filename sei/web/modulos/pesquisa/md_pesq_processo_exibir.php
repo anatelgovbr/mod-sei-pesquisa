@@ -20,6 +20,11 @@ try {
 
   	MdPesqConverteURI::converterURI();
    	MdPesqPesquisaUtil::valiadarLink();
+	
+	$strTitulo = 'Pesquisa Processual';
+	$identificadorFormatado = strtoupper(str_replace(" ", "_", InfraString::excluirAcentos($strTitulo.round(microtime(true)*1000))));
+	CaptchaSEI::getInstance()->configurarCaptcha($strTitulo);
+
 
 	//carrega configuracoes pesquisa
 	$objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
@@ -314,10 +319,12 @@ try {
 			if($objDocumentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO && $objProcedimentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO ){
 
 			    if(!$bolValidaIntimacaoEletronica){
+
                     $strResultado .= '<td align="center"><span class="retiraAncoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</span>';
                     $strResultado .= '<img src="/infra_css/imagens/espaco.gif">';
                     $strResultado .= '<img src="../peticionamento/imagens/svg/intimacao_nao_cumprida_doc_anexo.svg" style="vertical-align: middle; width: 19px; margin-top: -3px;" title="Acesso Restrito. &#13'.'Provisoriamente em razão de Intimação Eletrônica ainda não cumprida">';
-                }else{
+                
+				}else{
 
 			        $dtaCorteDoc = $objDocumentoDTO->getDtaInclusaoProtocolo();
 
@@ -325,14 +332,27 @@ try {
                         $dtaCorteDoc = $objProtocoloPesquisaPublicaDTO->getDtaDocumento();
                     }
 
+					$anexadoAProcessoRestrito = PesquisaIntegracao::isAnexadoAProcessoRestrito($dblIdProcedimento);
+
 			        if($dtaCortePesquisa && $dtaCortePesquisa > date('Y-m-d', strtotime(str_replace('/', '-', $dtaCorteDoc)))){
+
                         $strResultado .= '<td align="center"><span class="retiraAncoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</span>';
                         $strResultado .= '<img src="/infra_css/imagens/espaco.gif">';
                         $strResultado .= '<img src="../pesquisa/imagens/sei_chave_documento_restrito.svg" data-indicador="bbb" style="vertical-align: middle; width: 24px; margin-top: -3px;" title="Acesso Restrito. &#13'.'Provisoriamente em razão de necessidade de reclassificação de nível de acesso">';
                         $countDocsInDataCorte++;
-			        }else{
+
+			        }else if($anexadoAProcessoRestrito){
+
+						$strResultado .= '<td align="center"><span class="retiraAncoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</span>';
+                        $strResultado .= '<img src="/infra_css/imagens/espaco.gif">';
+                        $strResultado .= '<img src="../pesquisa/imagens/sei_chave_documento_restrito.svg" data-indicador="bbb" style="vertical-align: middle; width: 24px; margin-top: -3px;" title="Acesso Restrito em razão deste processo ser anexo a processo com classificação de nível de acesso restrito.">';
+                    
+					}else{
+
                         $strResultado .= '<td align="center" style="padding-right:22px"><a href="javascript:void(0);" onclick="window.open(\''.$strLinkDocumento.'\');" alt="'.PaginaSEIExterna::getInstance()->formatarXHTML($objDocumentoDTO->getStrNomeSerie()).'" title="'.PaginaSEIExterna::getInstance()->formatarXHTML($objDocumentoDTO->getStrNomeSerie()).'" class="ancoraPadraoAzul">'.$objDocumentoDTO->getStrProtocoloDocumentoFormatado().'</a></td>';
-                    }
+                    
+					}
+
                 }
 
 			}else{
@@ -576,7 +596,7 @@ try {
   
   if ($_POST['hdnFlagGerar']=='1'){
 
-        if ($bolCaptchaGerarPdf == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']])) {
+		if ($bolCaptchaGerarPdf == true && !CaptchaSEI::getInstance()->verificar()) {
 
   			PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
 
@@ -638,12 +658,7 @@ try {
   
 }catch(Exception $e){
   PaginaSEIExterna::getInstance()->processarExcecao($e);
-}
-
-$strTitulo = 'Pesquisa Processual';
-$identificadorFormatado = strtoupper(str_replace(" ", "_", InfraString::excluirAcentos($strTitulo.round(microtime(true)*1000))));
-CaptchaSEI::getInstance()->configurarCaptcha($identificadorFormatado);
- 
+} 
 
 PaginaSEIExterna::getInstance()->montarDocType();
 PaginaSEIExterna::getInstance()->abrirHtml();
@@ -760,12 +775,19 @@ PaginaSEIExterna::getInstance()->fecharStyle();
 PaginaSEIExterna::getInstance()->montarJavaScript();
 CaptchaSEI::getInstance()->montarJavascript();
 PaginaSEIExterna::getInstance()->abrirJavaScript();
+
+?>
+function OnSubmitForm(){ 
+	<? CaptchaSEI::getInstance()->validarOnSubmit('frmProcessoAcessoExternoConsulta'); ?>
+}
+<?php
+
 PaginaSEIExterna::getInstance()->fecharJavaScript();
 PaginaSEIExterna::getInstance()->fecharHead();
 PaginaSEIExterna::getInstance()->abrirBody($strTitulo,'onload="inicializar();"');
 ?>
 
-<form id="frmProcessoAcessoExternoConsulta" method="post">
+<form id="frmProcessoAcessoExternoConsulta" method="post"  onsubmit="return OnSubmitForm();">
 
 <? if($bolCaptchaGerarPdf): ?>
     <div id="divInfraModal" class="infraFundoTransparente" style="position: fixed; width: 100%; height: 100%; visibility: visible; background-image: none; background: rgba(0,0,0,.2); z-index: 9999">

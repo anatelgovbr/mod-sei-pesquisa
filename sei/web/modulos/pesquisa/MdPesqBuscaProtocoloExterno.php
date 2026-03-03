@@ -288,6 +288,31 @@ class MdPesqBuscaProtocoloExterno{
 
             }
 
+            // Verifica se o Processo pai do Protocolo está anexado a Processo Restrito:
+            $objRelProtocoloProtocoloDTO = new RelProtocoloProtocoloDTO();
+            $objRelProtocoloProtocoloDTO->retDblIdProtocolo1();
+            $objRelProtocoloProtocoloDTO->setDblIdProtocolo2($idProcesso);
+            $objRelProtocoloProtocoloDTO->setStrStaAssociacao(RelProtocoloProtocoloRN::$TA_PROCEDIMENTO_ANEXADO);
+            $listaProcessosAnexadores = (new RelProtocoloProtocoloRN())->listarRN0187($objRelProtocoloProtocoloDTO);
+
+            if (!empty($listaProcessosAnexadores)) {
+                
+                foreach ($listaProcessosAnexadores as $processoAnexador) {
+                    
+                    $objProtocoloDTO = new ProtocoloDTO();
+                    $objProtocoloDTO->setDblIdProtocolo($processoAnexador->getDblIdProtocolo1());
+                    $objProtocoloDTO->retStrStaNivelAcessoGlobal();
+                    $objProtocoloDTO->retStrStaNivelAcessoLocal();
+                    $objProcessoAnexador = (new ProtocoloRN())->consultarRN0186($objProtocoloDTO);
+
+                    if(!empty($objProcessoAnexador) && !in_array($objProcessoAnexador->getStrStaNivelAcessoGlobal(), [ProtocoloRN::$NA_PUBLICO])){
+                        $isPublico = false;
+                    }
+
+                }
+
+            }
+
             // Protege contra a não idexação no solr quando o processo ou documento passa de público para restrito ou quando o documento possui intimações não cumpridas:
             if(!empty($objProtocoloDTO)){
                 $isProcesso     = $objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_PROCEDIMENTO;
@@ -418,16 +443,10 @@ class MdPesqBuscaProtocoloExterno{
             $strProtocoloDocumento = "";
             if (empty($dados["protocolo_documento_formatado"]) == false) {
                 if ($objDocumentoDTO == null) {
-                    
-                    // TODO esse trecho remove registros que tem protocolo mas não tem o documento
-                    // faz quebrar a pesquisa ao inves de ignorar os registros defeituosos
-                    //
-                    // print_r($idProtocolo);
-                    // echo ' ';
-                    // print_r($dados["protocolo_documento_formatado"]);
-                    // die;
-
-                    continue;
+                    print_r($idProtocolo);
+                    echo ' ';
+                    print_r($dados["protocolo_documento_formatado"]);
+                    die;
                 }
                 $titulo .= " ";
                 if($isPublico){
