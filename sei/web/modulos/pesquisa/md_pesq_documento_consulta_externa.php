@@ -186,6 +186,10 @@ try {
 	if (!$bolFlag){
 		die('Documento não encontrado no processo.');
 	}
+
+	if(PesquisaIntegracao::isAnexadoAProcessoRestrito($objDocumentoDTO->getDblIdProcedimento())){
+		die('Documento não encontrado.');
+	}
 	
 	$strTitulo = $objDocumentoDTO->getStrNomeSerie().' '.$objDocumentoDTO->getStrSiglaUnidadeGeradoraProtocolo().' '.$objDocumentoDTO->getStrProtocoloDocumentoFormatado();
 	

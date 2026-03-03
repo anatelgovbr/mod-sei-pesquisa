@@ -13,6 +13,8 @@ try {
 	require_once("MdPesqBuscaProtocoloExterno.php");
 	require_once("MdPesqPesquisaUtil.php");
     require_once("MdPesqConverteURI.php");
+    
+    session_start();
 
     SessaoSEIExterna::getInstance()->validarSessao();
 
@@ -21,8 +23,6 @@ try {
 // 	InfraDebug::getInstance()->limpar();
 
 	$strTitulo = 'Pesquisa Pública';
-	$identificadorFormatado = strtoupper(str_replace(" ", "_", InfraString::excluirAcentos($strTitulo.round(microtime(true)*1000))));
-	CaptchaSEI::getInstance()->configurarCaptcha($identificadorFormatado);
 
     $objParametroPesquisaDTO = new MdPesqParametroPesquisaDTO();
     $objParametroPesquisaDTO->retStrNome();
@@ -49,7 +49,7 @@ try {
 		foreach($arrObjOrgaoDTO as $objOrgaoDTO){
 
 			$strOptionsOrgaos .= '<option value="'.$objOrgaoDTO->getNumIdOrgao().'"';
-			if (count($arrNumIdOrgao) > 0 && in_array($objOrgaoDTO->getNumIdOrgao(), $arrNumIdOrgao)){
+			if ((count($arrNumIdOrgao) > 0 && in_array($objOrgaoDTO->getNumIdOrgao(), $arrNumIdOrgao)) || (count($arrNumIdOrgao) == 0)){
 				$strOptionsOrgaos .= ' selected="selected"';
 			}
 			$strOptionsOrgaos .= '>'.PaginaPublicacoes::tratarHTML($objOrgaoDTO->getStrSigla()).'</option>'."\n";
@@ -68,10 +68,9 @@ try {
 
     PaginaSEIExterna::getInstance()->setBolXHTML(false);
 
-    $md5Captcha = null;
-
     if ($bolCaptcha) {
-        $md5Captcha = md5(InfraCaptcha::gerar(InfraCaptcha::obterCodigo()));
+
+        CaptchaSEI::getInstance()->configurarCaptcha($strTitulo);
     }
 
     $arrNumIdOrgao = [];
@@ -154,7 +153,7 @@ try {
         PaginaSEIExterna::getInstance()->salvarCampo('hdnSiglasUsuarios', '');
     }
 
-
+    $captchaValidado = '1'; // 1 = Listagem, 2 = Captcha inválido 3 = Captcha validado
     switch ($_GET['acao_externa']) {
 
         case 'protocolo_pesquisar':
@@ -259,12 +258,15 @@ try {
 
             $strResultado = '';
 
-            if (isset($_POST['sbmPesquisar']) || ($_GET['acao_origem_externa'] == "protocolo_pesquisar_paginado")) {
-
-	            if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
-
-                    if ($bolCaptcha == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']])) {
-                        PaginaSEIExterna::getInstance()->setStrMensagem('Código de confirmação inválido.', PaginaSEI::$TIPO_MSG_ERRO);
+            if (!empty($_POST)) {
+                $captchaValidado = '3'; // Captcha validado
+                if ($bolCaptcha == true && !CaptchaSEI::getInstance()->verificar()) {
+                        PaginaSEIExterna::getInstance()->setStrMensagem('Desafio não foi resolvido.', PaginaSEI::$TIPO_MSG_ERRO);
+                        $captchaValidado = '2'; // Captcha inválido
+                }
+	            /*if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
+                    if ($bolCaptcha == true && !CaptchaSEI::getInstance()->verificar()) {
+                        PaginaSEIExterna::getInstance()->setStrMensagem('Desafio não foi resolvido.', PaginaSEI::$TIPO_MSG_ERRO);
                     } else {
                         //preencheu palavra de busca ou alguma opção avançada
                         if (!InfraString::isBolVazia($q) || $bolPreencheuAvancado) {
@@ -287,10 +289,9 @@ try {
 
                 } else {
                     PaginaSEIExterna::getInstance()->setStrMensagem('A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.', PaginaSEI::$TIPO_MSG_ERRO);
-                }
+                }*/
 
             }
-
             break;
 
         default:
@@ -480,19 +481,7 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             }, 500);
         });
 
-        $('body').on('submit', '#seiSearch', function(e){
-            e.preventDefault(); e.stopPropagation();
-
-            if (!document.getElementById('chkSinProcessos').checked && !document.getElementById('chkSinDocumentosGerados').checked && !document.getElementById('chkSinDocumentosRecebidos').checked){
-                alert('Selecione pelo menos uma das opções de pesquisa avançada: Processos, Documentos Gerados ou Documento Recebidos');
-                return false;
-            }
-
-            if ($("#selOrgaoPesquisa").length > 0 && $("#selOrgaoPesquisa").multipleSelect("getSelects").length == 0) {
-                alert('Nenhum Órgão Gerador selecionado.');
-                return false;
-            }
-
+        if (<?= $captchaValidado ?> == '3') {
             $('input[name=partialfields]').val('');
             partialFields();
             buscaInicio = 0;
@@ -500,35 +489,8 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
             $('.total-registros-infinite').empty();
 
-            <? if($bolCaptcha): ?>
-                if (infraTrim(document.getElementById('txtInfraCaptcha').value) == '') {
-                    alert('Informe o código de confirmação.');
-                    document.getElementById('txtInfraCaptcha').focus();
-                    return false;
-                }else{
-                    document.getElementById('hdnInfraCaptcha').value='1';
-                }
-            <? endif; ?>
-
-            $('.ajax-loading').show();
-            let formData = $( this ).serialize();
-            let urlForm  = '<?= $strLinkAjaxPesquisar ?>&isPaginacao=false&inicio='+buscaInicio+'&rowsSolr='+rowsSolr;
-            $.post(urlForm, formData).done(function(data){
-                if( data.itens > 0){
-                    $('.retorno-ajax > table > tbody:last-child').append(data.html);
-                    buscaInicio += rowsSolr;
-                } else {
-                    $('.retorno-ajax').append(data.html);
-                }
-                qtdeItens = data.itens;
-            }).fail( function( xhr, status, error ) {
-                console.error("Erro: " + status + " - " + error);
-            }).always(function() {
-                $('.ajax-loading').hide();
-                updateCaptcha();
-                verificarRegistros();
-            });
-        });
+            carregarProximaPagina();
+        }
 
         $('body').on('reset', '#seiSearch', function(e){
             $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
@@ -646,21 +608,36 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
         $('#txtUnidade, #hdnIdUnidade').val('');
     }
 
+    function OnSubmitForm(){
+        if (!document.getElementById('chkSinProcessos').checked && !document.getElementById('chkSinDocumentosGerados').checked && !document.getElementById('chkSinDocumentosRecebidos').checked){
+            alert('Selecione pelo menos uma das opções de pesquisa avançada: Processos, Documentos Gerados ou Documento Recebidos');
+            return false;
+        }
+
+        if ($("#selOrgaoPesquisa").length > 0 && $("#selOrgaoPesquisa").multipleSelect("getSelects").length == 0) {
+            alert('Nenhum Órgão Gerador selecionado.');
+            return false;
+        }
+
+        <? CaptchaSEI::getInstance()->validarOnSubmit('seiSearch'); ?>
+    }
+
 <?
+
 PaginaSEIExterna::getInstance()->fecharJavaScript();
 PaginaSEIExterna::getInstance()->fecharHead();
-PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"');
+PaginaSEIExterna::getInstance()->abrirBody($strTitulo);
 ?>
     <!-- Aviso para quando o JavaScript estiver desabilitado -->
     <noscript>
-<!--        <style> .js-required { display: none !important; } </style>-->
         <div class="alert alert-warning mt-4" role="alert">
             <strong>JavaScript desabilitado:</strong> Para que a pesquisa pública de documentos e processos funcione corretamente é necessário que o JavaScript esteja habilitado nas configurações de seu navegador. Habilite-o e recarregue a página.
         </div>
     </noscript>
 
     <form id="seiSearch" name="seiSearch" method="post" class="mb-5"
-          action="<?= PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('md_pesq_processo_pesquisar.php?acao_externa=' . $_GET['acao_externa'] . '&acao_origem_externa=' . $_GET['acao_externa'] . $strParametros)) ?>">
+          action="<?= PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('md_pesq_processo_pesquisar.php?acao_externa=' . $_GET['acao_externa'] . '&acao_origem_externa=' . $_GET['acao_externa'] . $strParametros)) ?>"
+          onsubmit="return OnSubmitForm();">
 
         <div class="row">
             <div class="col-sm-12 col-md-9 col-lg-9 col-xl-6">
@@ -820,7 +797,7 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo, 'onload="inicializar();"'
 
     <div id="conteudo" class="retorno-ajax" style="width:99%;">
         <table border="0" class="pesquisaResultado">
-            <tbody><?= !empty($strResultado) ? $strResultado : '' ?></tbody>
+            <tbody></tbody>
         </table>
         <div class="ajax-loading" style="position: absolute; width: 97%; background: #F8F8F8; padding: 7px 10px 4px; text-align: center; display: none;">
             <div class="d-flex justify-content-center align-items-center">

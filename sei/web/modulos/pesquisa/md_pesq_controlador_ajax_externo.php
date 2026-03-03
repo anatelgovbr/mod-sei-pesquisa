@@ -144,9 +144,8 @@ try{
             ];
 
             if ($objMdPesqParametroPesquisaDTO->getStrValor() != "" && !is_null($objMdPesqParametroPesquisaDTO->getStrValor())) {
-                if ($bolCaptcha == true && mb_strtoupper($_POST['txtInfraCaptcha']) != mb_strtoupper($_SESSION['INFRA_CAPTCHA_V2_'.$_POST['hdnCId']]) && $_GET['isPaginacao'] == 'false') {
-                    $retorno['html'] = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">Código de confirmação inválido 1.</p></div></consultavazia>';
-                    $retorno['itens'] = 0;
+                if ($bolCaptcha == true && $_GET['isPaginacao'] == 'false' && !CaptchaSEI::getInstance()->verificar()) {
+                    $retorno['html'] = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">Desafio não foi resolvido.</p></div></consultavazia>';
                 } else {
                     if (!InfraString::isBolVazia($q) || $bolPreencheuAvancado) {
                         try {
@@ -167,12 +166,10 @@ try{
                 }
             } else {
                 $retorno['html'] = '<consultavazia><div class="sem-resultado"><p class="alert alert-danger">A Pesquisa Pública do SEI está desativada temporariamente por falta de parametrização na sua administração.</p></div></consultavazia>';
-                $retorno['itens'] = 0;
             }
             
             $retorno['html'] = MdPesqBuscaProtocoloExterno::tratarHTML($retorno['html']);
             InfraAjax::enviarJSON(json_encode($retorno,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
-
             break;
 		
 		default:

@@ -37,7 +37,6 @@ function gerarPdfModal(){
   	}
 
     document.getElementById('divInfraModal').style.display = "block";
-    document.getElementById('txtInfraCaptcha').focus();
 
 }
 
@@ -66,13 +65,7 @@ function gerarPdf() {
 
 <? if($bolCaptchaGerarPdf): ?>
 
-    if (document.getElementById('txtInfraCaptcha').value.length != 6){
-        $('.modal-alert-msg').html('<p class="alert alert-warning">Informe o código de confirmação!</p>');
-        document.getElementById('txtInfraCaptcha').focus();
-        return false;
-    }
-
-    if(document.getElementById('hdnInfraItensSelecionados').value != '' && document.getElementById('txtInfraCaptcha').value.length == 6){
+    if(document.getElementById('hdnInfraItensSelecionados').value != ''){
         fecharPdfModal();
         infraExibirAviso(false);
         document.getElementById('hdnFlagGerar').value = '1';
