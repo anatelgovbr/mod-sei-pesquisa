@@ -9,7 +9,7 @@ class PesquisaIntegracao extends SeiIntegracao {
 	
 	public function getVersao()
 	{
-		return '4.3.1';
+		return '4.3.2';
 	}
 	
 	
@@ -420,6 +420,153 @@ class PesquisaIntegracao extends SeiIntegracao {
 		
 	}
 	
+	public static function verificaSeModPesquisaPublicaVersaoMinima()
+	{
+		$arrModulos = ConfiguracaoSEI::getInstance()->getValor('SEI','Modulos');
+
+		if(is_array($arrModulos) && array_key_exists('PesquisaIntegracao', $arrModulos)){
+			$objInfraParametroDTO = new InfraParametroDTO();
+			$objInfraParametroDTO->setStrNome('VERSAO_MODULO_PESQUISA_PUBLICA');
+			$objInfraParametroDTO->retStrValor();
+
+			$objInfraParametroBD = new InfraParametroBD(BancoSEI::getInstance());
+			$arrObjInfraParametroDTO = $objInfraParametroBD->consultar($objInfraParametroDTO);
+
+			if(!empty($arrObjInfraParametroDTO)){
+				return version_compare($arrObjInfraParametroDTO->getStrValor(), '4.3.0', '>=');
+			}
+		}
+
+		return false;
+	}
+
+	private function validaDocumentoPublicoPesquisaPublica($idDocumento)
+	{
+		// Consultar protocolo do documento
+		$objProtocoloDTO = new ProtocoloDTO();
+		$objProtocoloDTO->setDblIdProtocolo($idDocumento);
+		$objProtocoloDTO->retStrStaNivelAcessoLocal();
+		$objProtocoloDTO->retStrStaNivelAcessoGlobal();
+		$objProtocoloDTO->retStrStaProtocolo();
+		$objProtocoloDTO->retDtaInclusao();
+		$objProtocoloDTO->retDblIdProtocolo();
+		$objProtocoloDTO = (new ProtocoloRN())->consultarRN0186($objProtocoloDTO);
+
+		if (empty($objProtocoloDTO)
+			|| $objProtocoloDTO->getStrStaNivelAcessoLocal() != ProtocoloRN::$NA_PUBLICO
+			|| $objProtocoloDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_SIGILOSO) {
+			return false;
+		}
+
+		// Consultar dados do documento
+		$objDocumentoDTO = new DocumentoDTO();
+		$objDocumentoDTO->setDblIdDocumento($idDocumento);
+		$objDocumentoDTO->retDblIdDocumento();
+		$objDocumentoDTO->retDblIdProcedimento();
+		$objDocumentoDTO->retStrStaDocumento();
+		$objDocumentoDTO = (new DocumentoRN())->consultarRN0005($objDocumentoDTO);
+
+		if (empty($objDocumentoDTO)) {
+			return false;
+		}
+
+		// Verificar processo pai do documento - deve ter nivel de acesso local publico
+		$idProcedimento = $objDocumentoDTO->getDblIdProcedimento();
+		$objProcessoDTO = new ProtocoloDTO();
+		$objProcessoDTO->setDblIdProtocolo($idProcedimento);
+		$objProcessoDTO->setStrStaProtocolo(ProtocoloRN::$TP_PROCEDIMENTO);
+		$objProcessoDTO->retStrStaNivelAcessoLocal();
+		$objProcessoDTO->retStrStaNivelAcessoGlobal();
+		$objProcessoDTO = (new ProtocoloRN())->consultarRN0186($objProcessoDTO);
+
+		if (empty($objProcessoDTO) || $objProcessoDTO->getStrStaNivelAcessoLocal() != ProtocoloRN::$NA_PUBLICO) {
+			return false;
+		}
+
+		// Verificar se o processo pai esta anexado a processo restrito
+		$objRelProtocoloProtocoloDTO = new RelProtocoloProtocoloDTO();
+		$objRelProtocoloProtocoloDTO->retDblIdProtocolo1();
+		$objRelProtocoloProtocoloDTO->setDblIdProtocolo2($idProcedimento);
+		$objRelProtocoloProtocoloDTO->setStrStaAssociacao(RelProtocoloProtocoloRN::$TA_PROCEDIMENTO_ANEXADO);
+		$listaProcessosAnexadores = (new RelProtocoloProtocoloRN())->listarRN0187($objRelProtocoloProtocoloDTO);
+
+		if (!empty($listaProcessosAnexadores)) {
+			foreach ($listaProcessosAnexadores as $processoAnexador) {
+				$objProtAnexadorDTO = new ProtocoloDTO();
+				$objProtAnexadorDTO->setDblIdProtocolo($processoAnexador->getDblIdProtocolo1());
+				$objProtAnexadorDTO->retStrStaNivelAcessoGlobal();
+				$objProcessoAnexador = (new ProtocoloRN())->consultarRN0186($objProtAnexadorDTO);
+
+				if (!empty($objProcessoAnexador) && $objProcessoAnexador->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) {
+					return false;
+				}
+			}
+		}
+
+		// Documentos gerados devem ser assinados (exceto formularios automaticos)
+		if ($objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_DOCUMENTO_GERADO
+			&& $objDocumentoDTO->getStrStaDocumento() != DocumentoRN::$TD_FORMULARIO_AUTOMATICO) {
+
+			$objAssinaturaDTO = new AssinaturaDTO();
+			$objAssinaturaDTO->setDblIdDocumento($idDocumento);
+			$objAssinaturaDTO->retNumIdAssinatura();
+			$objAssinaturaDTO->setNumMaxRegistrosRetorno(1);
+			$arrObjAssinaturaDTO = (new AssinaturaRN())->listarRN1323($objAssinaturaDTO);
+
+			if (empty($arrObjAssinaturaDTO)) {
+				return false;
+			}
+		}
+
+		// Verificar data de corte da pesquisa
+		$dtaParamCortePesquisa = (new MdPesqParametroPesquisaRN())->existeDataCortePesquisa();
+		if ($dtaParamCortePesquisa) {
+			$dtaCorteDoc = $objProtocoloDTO->getDtaInclusao();
+
+			// Para documentos gerados (editor interno ou formulario gerado), usar data da primeira assinatura
+			if ($objProtocoloDTO->getStrStaProtocolo() == ProtocoloRN::$TP_DOCUMENTO_GERADO
+				&& in_array($objDocumentoDTO->getStrStaDocumento(), [DocumentoRN::$TD_EDITOR_INTERNO, DocumentoRN::$TD_FORMULARIO_GERADO])) {
+
+				$objAssinDTO = new AssinaturaDTO();
+				$objAssinDTO->retDthAberturaAtividade();
+				$objAssinDTO->setDblIdDocumento($idDocumento);
+				$objAssinDTO->setOrdNumIdAssinatura(InfraDTO::$TIPO_ORDENACAO_ASC);
+				$objAssinDTO->setNumMaxRegistrosRetorno(1);
+				$arrObjAssinDTO = (new AssinaturaRN())->listarRN1323($objAssinDTO);
+
+				if (!empty($arrObjAssinDTO) && $arrObjAssinDTO[0] != null && $arrObjAssinDTO[0]->isSetDthAberturaAtividade()) {
+					$dtaCorteDoc = substr($arrObjAssinDTO[0]->getDthAberturaAtividade(), 0, 10);
+				}
+			}
+
+			$dtaCorteDocFormatada = date('Y-m-d', strtotime(str_replace('/', '-', $dtaCorteDoc)));
+			if ($dtaParamCortePesquisa > $dtaCorteDocFormatada) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public function verificarAcessoProtocolo($arrObjProcedimentoAPI, $arrObjDocumentoAPI)
+	{
+		$ret = null;
+
+		if (!self::verificaSeModPesquisaPublicaVersaoMinima()) {
+			return $ret;
+		}
+
+		foreach ($arrObjDocumentoAPI as $objDocumentoAPI) {
+			if ($objDocumentoAPI->getNivelAcesso() != ProtocoloRN::$NA_SIGILOSO) {
+				if ($this->validaDocumentoPublicoPesquisaPublica($objDocumentoAPI->getIdDocumento())) {
+					$ret[$objDocumentoAPI->getIdDocumento()] = SeiIntegracao::$TAM_PERMITIDO;
+				}
+			}
+		}
+
+		return $ret;
+	}
+
 	public function concluirProcesso($arrObjProcedimentoAPI)
 	{
 		

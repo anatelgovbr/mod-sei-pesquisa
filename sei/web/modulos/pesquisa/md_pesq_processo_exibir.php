@@ -142,7 +142,7 @@ try {
   //Objeto Fake para paginacao
   $objProtocoloPesquisaPublicaPaginacaoDTO = new MdPesqProtocoloPesquisaPublicaDTO();
   $objProtocoloPesquisaPublicaPaginacaoDTO->retTodos(true);
-  PaginaSEIExterna::getInstance()->prepararOrdenacao($objProtocoloPesquisaPublicaPaginacaoDTO, 'Registro', InfraDTO::$TIPO_ORDENACAO_ASC);
+  PaginaSEIExterna::getInstance()->prepararOrdenacao($objProtocoloPesquisaPublicaPaginacaoDTO, 'Registro', InfraDTO::$TIPO_ORDENACAO_ASC, true);
   //PaginaSEIExterna::getInstance()->prepararPaginacao($objProtocoloPesquisaPublicaPaginacaoDTO,4);
   //PaginaSEIExterna::getInstance()->processarPaginacao($objProtocoloPesquisaPublicaPaginacaoDTO);
   $arrObjProtocoloPesquisaPublicaDTO = array();
@@ -539,14 +539,22 @@ try {
             //verifica se o documento relacionado a esta atividade/andamento está assinado
             $id_doc = $arrAtribAndamento[0]->getStrIdOrigem();
 
-            $objAssinaturaDTO = new AssinaturaDTO();
-            $objAssinaturaDTO->setDblIdDocumento($id_doc);
-            $objAssinaturaDTO->retNumIdAssinatura();
+            // Documentos externos (recebidos) nao possuem assinatura, apenas verifica em documentos gerados
+            $objDocAndamentoDTO = new DocumentoDTO();
+            $objDocAndamentoDTO->setDblIdDocumento($id_doc);
+            $objDocAndamentoDTO->retStrStaProtocoloProtocolo();
+            $objDocAndamentoDTO = $objDocumentoRN->consultarRN0005($objDocAndamentoDTO);
 
-            $countAss = ( new AssinaturaRN() )->contarRN1324($objAssinaturaDTO);
+            if ($objDocAndamentoDTO != null && $objDocAndamentoDTO->getStrStaProtocoloProtocolo() == ProtocoloRN::$TP_DOCUMENTO_GERADO) {
+                $objAssinaturaDTO = new AssinaturaDTO();
+                $objAssinaturaDTO->setDblIdDocumento($id_doc);
+                $objAssinaturaDTO->retNumIdAssinatura();
 
-            // se nao tem assinatura, pula para a proxima atividade/andamento
-            if ( $countAss == 0 ) continue;
+                $countAss = ( new AssinaturaRN() )->contarRN1324($objAssinaturaDTO);
+
+                // se nao tem assinatura, pula para a proxima atividade/andamento
+                if ( $countAss == 0 ) continue;
+            }
         }
         
         if ($objAtividadeDTO->getStrSinUltimaUnidadeHistorico() == 'S'){

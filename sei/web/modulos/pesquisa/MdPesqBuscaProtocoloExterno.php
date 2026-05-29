@@ -299,11 +299,11 @@ class MdPesqBuscaProtocoloExterno{
                 
                 foreach ($listaProcessosAnexadores as $processoAnexador) {
                     
-                    $objProtocoloDTO = new ProtocoloDTO();
-                    $objProtocoloDTO->setDblIdProtocolo($processoAnexador->getDblIdProtocolo1());
-                    $objProtocoloDTO->retStrStaNivelAcessoGlobal();
-                    $objProtocoloDTO->retStrStaNivelAcessoLocal();
-                    $objProcessoAnexador = (new ProtocoloRN())->consultarRN0186($objProtocoloDTO);
+                    $objProtocoloAnexadoDTO = new ProtocoloDTO();
+                    $objProtocoloAnexadoDTO->setDblIdProtocolo($processoAnexador->getDblIdProtocolo1());
+                    $objProtocoloAnexadoDTO->retStrStaNivelAcessoGlobal();
+                    $objProtocoloAnexadoDTO->retStrStaNivelAcessoLocal();
+                    $objProcessoAnexador = (new ProtocoloRN())->consultarRN0186($objProtocoloAnexadoDTO);
 
                     if(!empty($objProcessoAnexador) && !in_array($objProcessoAnexador->getStrStaNivelAcessoGlobal(), [ProtocoloRN::$NA_PUBLICO])){
                         $isPublico = false;
@@ -556,8 +556,10 @@ class MdPesqBuscaProtocoloExterno{
 
     private static function retornoVazio($termo)
     {
+        $termoEscapado = self::escapeSaidaHtml($termo);
+
         $semResultados = "<consultavazia>";
-        $semResultados .= "<div class=\"sem-resultado\">Sua pesquisa pelo termo <b>" .$termo. "</b> não encontrou nenhum protocolo correspondente. <br/><br/>Sugestões:";
+        $semResultados .= "<div class=\"sem-resultado\">Sua pesquisa pelo termo <b>" .$termoEscapado. "</b> não encontrou nenhum protocolo correspondente. <br/><br/>Sugestões:";
         $semResultados .= "<ul>";
         $semResultados .= "<li>Certifique-se de que todas as palavras estejam escritas corretamente.</li>";
         $semResultados .= "<li>Tente palavras-chave diferentes.</li>";
@@ -568,6 +570,17 @@ class MdPesqBuscaProtocoloExterno{
 
         return ['itens' => 0,'html'  => $semResultados];
     
+    }
+
+    private static function escapeSaidaHtml($valor): string
+    {
+        $valor = (string)$valor;
+
+        if (class_exists('PaginaSEIExterna') && method_exists('PaginaSEIExterna', 'tratarHTML')) {
+            return PaginaSEIExterna::tratarHTML($valor);
+        }
+
+        return htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
     }
 
     public static function tratarHTML(?string $s): string {
