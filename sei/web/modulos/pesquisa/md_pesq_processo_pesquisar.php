@@ -485,6 +485,8 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
             $('input[name=partialfields]').val('');
             partialFields();
             buscaInicio = 0;
+            qtdeItens = 0;
+            paginar = true;
 
             $('.retorno-ajax > table > tbody tr, .sem-resultado').remove();
             $('.total-registros-infinite').empty();
@@ -510,20 +512,53 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
 
             $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=true&inicio=' + buscaInicio + '&rowsSolr=' + rowsSolr, $('#seiSearch').serialize())
                 .done(function(data){
-                    const $data = $(data);
                     consultaVazia = false;
+
                     if (data.itens > 0) {
-                        $('.retorno-ajax > table > tbody:last-child').append(data.html);
+                        // Guarda o total real do Solr na primeira resposta valida
+                        if (qtdeItens == 0) {
+                            qtdeItens = data.itens;
+                        }
+
+                        // Verifica se veio HTML util (nao vazio e sem tag consultavazia)
+                        var htmlUtil = data.html && $.trim(data.html) !== '' && data.html.indexOf('<consultavazia>') === -1;
+
+                        if (htmlUtil) {
+                            $('.retorno-ajax > table > tbody:last-child').append(data.html);
+                        } else {
+                            // Pagina inteira filtrada no servidor - marcar pra tentar proxima
+                            consultaVazia = true;
+                        }
                     } else {
+                        // Solr retornou 0 resultados (consultavazia real)
                         consultaVazia = true;
                     }
+
                     buscaInicio += rowsSolr;
                 })
                 .always(function() {
                     $('.ajax-loading').hide();
                     updateCaptcha();
-                    if(consultaVazia && buscaInicio < qtdeItens){
+
+                    if (consultaVazia && buscaInicio < qtdeItens) {
+                        // Ainda ha paginas no Solr para tentar - buscar proxima
                         carregarProximaPagina();
+                    } else if (consultaVazia && $('.retorno-ajax table tbody tr').length === 0 && $('.sem-resultado').length === 0) {
+                        // Esgotou todas as paginas e nao exibiu nenhum resultado - mostrar mensagem
+                        $('.retorno-ajax').append(
+                            '<div class="sem-resultado">' +
+                            'Sua pesquisa não encontrou nenhum protocolo correspondente.' +
+                            '<br/><br/>Sugestões:' +
+                            '<ul>' +
+                            '<li>Certifique-se de que todas as palavras estejam escritas corretamente.</li>' +
+                            '<li>Tente palavras-chave diferentes.</li>' +
+                            '<li>Tente palavras-chave mais genéricas.</li>' +
+                            '</ul></div>'
+                        );
+                        paginar = false;
+                    } else if (consultaVazia) {
+                        // Esgotou paginas mas ja tem resultados na tela - apenas parar
+                        paginar = false;
                     }
                 });
         }
@@ -542,9 +577,14 @@ PaginaSEIExterna::getInstance()->abrirJavaScript();
 
             $.post('<?= $strLinkAjaxPesquisar ?>&isPaginacao=true&inicio=' + buscaInicio + '&rowsSolr=' + rowsSolr, $('#seiSearch').serialize())
                 .done(function(data){
-                    const $data = $(data);
                     if (data.itens > 0) {
-                        $('.retorno-ajax > table > tbody:last-child').append(data.html);
+                        if (qtdeItens == 0) {
+                            qtdeItens = data.itens;
+                        }
+                        var htmlUtil = data.html && $.trim(data.html) !== '' && data.html.indexOf('<consultavazia>') === -1;
+                        if (htmlUtil) {
+                            $('.retorno-ajax > table > tbody:last-child').append(data.html);
+                        }
                     }
                     buscaInicio += rowsSolr;
                 })
