@@ -169,8 +169,12 @@ class MdPesqBuscaProtocoloExterno{
 
         //MONTA URL DA BUSCA       
         $urlBusca   = SeiSolrUtil::obterUrlSolAuth() . '/' . ConfiguracaoSEI::getInstance()->getValor('Solr', 'CoreProtocolos') . '/select?' . http_build_query($parametros) . '&hl.method=original&hl=true&hl.snippets=2&hl.fl=content&hl.fragsize=100&hl.maxAnalyzedChars=1048576&hl.alternateField=content&hl.maxAlternateFieldLength=100&hl.maxClauseCount=2000&rows='.$numMaxResultados.'&fl=id,id_prot,id_proc,id_doc,id_tipo_proc,id_serie,id_anexo,id_uni_ger,prot_doc,prot_proc,numero,id_usu_ger,dta_ger,dta_inc,id_assin,sta_prot,desc';
-        $resultados = file_get_contents($urlBusca, true);
+        $resultados = @file_get_contents($urlBusca, true);
         $termo = !empty($q) ? $q : $pesquisaProtocolo;
+
+        if ($resultados === false) {
+            return self::retornoIndisponivel($termo);
+        }
 
         if ($resultados == '') {
             return self::retornoVazio($termo);
@@ -570,6 +574,19 @@ class MdPesqBuscaProtocoloExterno{
 
         return ['itens' => 0,'html'  => $semResultados];
     
+    }
+
+    private static function retornoIndisponivel($termo)
+    {
+        $termoEscapado = self::escapeSaidaHtml($termo);
+
+        $semResultados = "<consultavazia>";
+        $semResultados .= "<div class=\"sem-resultado\">Serviço de busca temporariamente indisponível. <br/><br/>";
+        $semResultados .= "Não foi possível realizar a pesquisa pelo termo <b>" .$termoEscapado. "</b> no momento. Por favor, tente novamente em alguns instantes.";
+        $semResultados .= "</div>";
+        $semResultados .= "</consultavazia>";
+
+        return ['itens' => 0,'html'  => $semResultados];
     }
 
     private static function escapeSaidaHtml($valor): string

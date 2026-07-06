@@ -124,12 +124,21 @@ try {
 		$bolMensagemProcessoRestrito = true;
 		
 	}
+
+	$objProtocoloRN = new ProtocoloRN();
+    $arrObjNivelAcessoDTO = InfraArray::indexarArrInfraDTO($objProtocoloRN->listarNiveisAcessoRN0878(), 'StaNivel');
+    $strNivelAcesso = 'Não Identificado';
+    if (isset($arrObjNivelAcessoDTO[$objProcedimentoDTO->getStrStaNivelAcessoGlobalProtocolo()])) {
+      $strNivelAcesso = $arrObjNivelAcessoDTO[$objProcedimentoDTO->getStrStaNivelAcessoGlobalProtocolo()]->getStrDescricao();
+    }
 	
 	$strResultadoCabecalho = '';
 	$strResultadoCabecalho .= '<table id="tblCabecalho" width="99.3%" class="infraTable" summary="Cabeçalho de Processo" >'."\n";
+	$strResultadoCabecalho .= '<tr><td width="20%"><b>Orgão:</b></td><td>'.$objProcedimentoDTO->getStrDescricaoOrgaoUnidadeGeradoraProtocolo().'</td></tr>'."\n";
 	$strResultadoCabecalho .= '<tr><td width="20%"><b>Processo:</b></td><td>'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().$strHipoteseLegal.'</td></tr>'."\n";
 	$strResultadoCabecalho .= '<tr><td width="20%"><b>Tipo:</b></td><td>'.PaginaSEIExterna::getInstance()->formatarXHTML($objProcedimentoDTO->getStrNomeTipoProcedimento()).'</td></tr>'."\n";
 	$strResultadoCabecalho .= '<tr><td width="20%"><b>Data de Geração:</b></td><td>'.$objProcedimentoDTO->getDtaGeracaoProtocolo().'</td></tr>'."\n";
+	$strResultadoCabecalho .= '<tr><td width="20%"><b>Nível de Acesso:</b></td><td>' . PaginaSEI::tratarHTML($strNivelAcesso) . '</td></tr>' . "\n";
 	$strResultadoCabecalho .= '<tr><td width="20%"><b>Interessados:</b></td><td> '.$strInteressados.'</td></tr>'."\n";
 	$strResultadoCabecalho .= '</table>'."\n";
 
