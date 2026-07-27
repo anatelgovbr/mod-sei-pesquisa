@@ -9,7 +9,7 @@ class PesquisaIntegracao extends SeiIntegracao {
 	
 	public function getVersao()
 	{
-		return '4.3.3';
+		return '4.3.4';
 	}
 	
 	
@@ -152,9 +152,12 @@ class PesquisaIntegracao extends SeiIntegracao {
 	}
 	
 	/**
-	 * Lista processos anexados ao processo principal
-	 * @param $idProcedimento
-	 * @return mixed
+	 * Lista os processos anexados (filhos) do processo informado, ou seja,
+	 * as relacoes de RelProtocoloProtocoloDTO em que $idProcedimento e o processo
+	 * anexador (IdProtocolo1).
+	 * 
+	 * @param mixed $idProcedimento Id do processo anexador (RelProtocoloProtocoloDTO::IdProtocolo1)
+	 * @return RelProtocoloProtocoloDTO[] Relacoes com IdProtocolo2 (processo anexado) preenchido
 	 * @throws InfraException
 	 */
 	public function listarProcessosAnexado($idProcedimento)
@@ -173,9 +176,12 @@ class PesquisaIntegracao extends SeiIntegracao {
 	}
 	
 	/**
-	 * Lista processos anexados ao processo principal
-	 * @param $idProcedimento
-	 * @return mixed
+	 * Lista os processos anexadores (pais) do processo informado, ou seja,
+	 * as relacoes de RelProtocoloProtocoloDTO em que $idProcedimento e o processo
+	 * anexado (IdProtocolo2).
+	 * 
+	 * @param mixed $idProcedimento Id do processo anexado (RelProtocoloProtocoloDTO::IdProtocolo2)
+	 * @return RelProtocoloProtocoloDTO[] Relacoes com IdProtocolo1 (processo anexador) preenchido
 	 * @throws InfraException
 	 */
 	public function listarProcessosAnexadores($idProcedimento)
@@ -185,8 +191,8 @@ class PesquisaIntegracao extends SeiIntegracao {
 		}
 		
 		$objRelProtocoloProtocoloDTO = new RelProtocoloProtocoloDTO();
-		$objRelProtocoloProtocoloDTO->retDblIdProtocolo2($idProcedimento);
-		$objRelProtocoloProtocoloDTO->setDblIdProtocolo1();
+		$objRelProtocoloProtocoloDTO->retDblIdProtocolo1();
+		$objRelProtocoloProtocoloDTO->setDblIdProtocolo2($idProcedimento);
 		$objRelProtocoloProtocoloDTO->setStrStaAssociacao(RelProtocoloProtocoloRN::$TA_PROCEDIMENTO_ANEXADO);
 		$objRelProtocoloProtocoloDTO = (new RelProtocoloProtocoloRN())->listarRN0187($objRelProtocoloProtocoloDTO);
 		
@@ -399,7 +405,7 @@ class PesquisaIntegracao extends SeiIntegracao {
 				if ($listaProcessosAnexadores) {
 					$listaDocProcessoAnexo3 = '';
 					foreach ($listaProcessosAnexadores as $processoAnexador) {
-						$documentos3 = self::listarDocumentos($processoAnexador->getDblIdProtocolo2());
+						$documentos3 = self::listarDocumentos($processoAnexador->getDblIdProtocolo1());
 						if ($documentos3) {
 							$listaDocProcessoAnexo3 = self::verificaDocumentoRestrito($documentos3, $arrValor);
 						}
