@@ -286,7 +286,7 @@ try {
    		if($objProtocoloPesquisaPublicaDTO->getStrStaAssociacao() == RelProtocoloProtocoloRN::$TA_DOCUMENTO_ASSOCIADO){
    	
    			$objDocumentoDTO = $objProtocoloPesquisaPublicaDTO->getObjDocumentoDTO();
-   			$urlCripografadaDocumeto = MdPesqCriptografia::criptografa('acao_externa=documento_exibir&id_documento='.$objDocumentoDTO->getDblIdDocumento().'&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']);
+			$urlCripografadaDocumeto = MdPesqCriptografia::criptografaParametros('acao_externa=documento_exibir&id_documento='.$objDocumentoDTO->getDblIdDocumento().'&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo']);
    			$strLinkDocumento = PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink('md_pesq_documento_consulta_externa.php?'.$urlCripografadaDocumeto));
 
 			//Protege acesso à documento público de intimação eletrônica
@@ -456,7 +456,7 @@ try {
    			}
    			
    			if($objProcedimentoDTOAnexado->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO && $objProcedimentoDTO->getStrStaNivelAcessoLocalProtocolo() == ProtocoloRN::$NA_PUBLICO ){
-   				$parametrosCriptografadosProcesso = MdPesqCriptografia::criptografa('id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo'].'&id_procedimento='.$objProcedimentoDTOAnexado->getDblIdProcedimento());
+				$parametrosCriptografadosProcesso = MdPesqCriptografia::criptografaParametros('id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo'].'&id_procedimento='.$objProcedimentoDTOAnexado->getDblIdProcedimento());
    				$urlPesquisaProcesso = 'md_pesq_processo_exibir.php?'.$parametrosCriptografadosProcesso;
    				
    				// $strLinkProcessoAnexado = PaginaSEIExterna::getInstance()->formatarXHTML(SessaoSEIExterna::getInstance()->assinarLink('processo_acesso_externo_consulta.php?id_acesso_externo='.$_GET['id_acesso_externo'].'&id_acesso_externo_assinatura='.$_GET['id_acesso_externo_assinatura'].'&id_procedimento_anexado='.$objProcedimentoDTOAnexado->getDblIdProcedimento()));
@@ -855,7 +855,7 @@ if($bolGeracaoOK){
 	<script>
 	if (navigator.userAgent.match(/msie/i) || navigator.userAgent.match(/trident/i) ){
 	
-		window.open('<?=SessaoSEI::getInstance()->assinarLink('md_pesq_processo_exibe_arquivo.php?'.MdPesqCriptografia::criptografa('acao_externa=usuario_externo_exibir_arquivo&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo'].'&nome_arquivo='.$objAnexoDTO->getStrNome().'&nome_download=SEI-'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().'.pdf'));?>');
+		window.open('<?=SessaoSEI::getInstance()->assinarLink('md_pesq_processo_exibe_arquivo.php?'.MdPesqCriptografia::criptografaParametros('acao_externa=usuario_externo_exibir_arquivo&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo='.$_GET['id_orgao_acesso_externo'].'&nome_arquivo='.$objAnexoDTO->getStrNome().'&nome_download=SEI-'.$objProcedimentoDTO->getStrProtocoloProcedimentoFormatado().'.pdf'));?>');
 			<?
 					if($bolCaptchaGerarPdf){ 
 					?>

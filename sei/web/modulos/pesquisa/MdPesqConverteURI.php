@@ -13,19 +13,42 @@ class MdPesqConverteURI{
 	public static function converterURI()
 	{
 		try {
-			$arr = explode('?', $_SERVER['REQUEST_URI']);
-			$arrParametros = MdPesqCriptografia::descriptografa($arr[1]);
-			$parametros = explode('&', $arrParametros);
-			$chaves = array();
-			$valores = array();
-			foreach ($parametros as $parametro){
-				$arrChaveValor = explode('=', $parametro);
-				$chaves[] = $arrChaveValor[0];
-				$valores[] = $arrChaveValor[1];
+			$strQuery = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
+			if (!is_string($strQuery) || $strQuery === '') {
+				throw new InfraException('Parametros criptografados ausentes.');
 			}
-			$novosParametros = array_combine($chaves, array_values($valores));
+
+			$arrQuery = [];
+			parse_str($strQuery, $arrQuery);
+
+			if (isset($arrQuery[MdPesqCriptografia::PARAMETRO_LINK])) {
+				$strParametrosCriptografados = $arrQuery[MdPesqCriptografia::PARAMETRO_LINK];
+			} else {
+				$strParametrosCriptografados = explode('&', $strQuery, 2)[0];
+				if (strpos($strParametrosCriptografados, '=') !== false) {
+					throw new InfraException('Parametros criptografados ausentes.');
+				}
+			}
+
+			if (!is_string($strParametrosCriptografados) || $strParametrosCriptografados === '') {
+				throw new InfraException('Parametros criptografados invalidos.');
+			}
+
+			$arrParametros = MdPesqCriptografia::descriptografa($strParametrosCriptografados);
+			if (!is_string($arrParametros) || $arrParametros === '') {
+				throw new InfraException('Parametros criptografados invalidos.');
+			}
+
+			$novosParametros = [];
+			parse_str($arrParametros, $novosParametros);
+
+			if (empty($novosParametros)) {
+				throw new InfraException('Parametros criptografados invalidos.');
+			}
+
 			$new_query_string = http_build_query($novosParametros);
-			$_SERVER['REQUEST_URI'] = $arr[0].'?'.$new_query_string;
+			$_SERVER['REQUEST_URI'] = strtok($_SERVER['REQUEST_URI'], '?').'?'.$new_query_string;
+			$_SERVER['QUERY_STRING'] = $new_query_string;
 			$_GET = $novosParametros;
 		}catch (Exception $e){
 			throw new InfraException('Erro validando url.', $e);
