@@ -11,6 +11,12 @@
 class MdPesqCriptografia{
 
 	private static $KEY = 'c@d3s3mp@p3l';
+	const PARAMETRO_LINK = 'md_pesq_parametros';
+
+	public static function criptografaParametros($texto)
+	{
+		return self::PARAMETRO_LINK.'='.self::criptografa($texto);
+	}
 	
 	public static function criptografa($texto)
 	{
@@ -52,7 +58,7 @@ class MdPesqCriptografia{
 	        return $objParametroPesquisaDTO->getStrValor();
 	    }
 	    
-	    return $KEY;
+	    return self::$KEY;
 	}
 	
 	//Alterar metodo de criptografia por uma criptografia php

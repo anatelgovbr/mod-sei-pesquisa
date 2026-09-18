@@ -378,17 +378,14 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo);
                     <div class="col-sm-12 col-md-8 col-lg-9 col-xl-9">
                         <label id="lblSinProcessos" for="chkSinProcessos" accesskey="" class="infraLabelCheckbox">
                             <input type="checkbox" id="chkSinProcessos" name="chkSinProcessos" value="P" class="infraCheckbox" <?= ($strSinProcessos == 'P' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
-                            <noscript><input type="checkbox" id="chkSinProcessos" name="chkSinProcessos" value="P" class="" <?= ($strSinProcessos == 'P' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/></noscript>
 							Processos
                         </label>
                         <label id="lblSinDocumentosGerados" for="chkSinDocumentosGerados" accesskey="" class="infraLabelCheckbox">
                             <input type="checkbox" id="chkSinDocumentosGerados" name="chkSinDocumentosGerados" value="G" class="infraCheckbox" <?= ($strSinDocumentosGerados == 'G' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
-                            <noscript><input type="checkbox" id="chkSinDocumentosGerados" name="chkSinDocumentosGerados" value="G" class="" <?= ($strSinDocumentosGerados == 'G' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/></noscript>
 							Documentos Gerados
                         </label>
                         <label id="lblSinDocumentosRecebidos" for="chkSinDocumentosRecebidos" accesskey="" class="infraLabelCheckbox">
-                            <input type="checkbox" id="chkSinDocumentosRecebidos" name="chkSinDocumentosRecebidos" value="R" class="infraCheckbox" <?= ($strSinDocumentosRecebidos == 'R' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/></noscript>
-                            <noscript><input type="checkbox" id="chkSinDocumentosRecebidos" name="chkSinDocumentosRecebidos" value="R" class="" <?= ($strSinDocumentosRecebidos == 'R' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/></noscript>
+                            <input type="checkbox" id="chkSinDocumentosRecebidos" name="chkSinDocumentosRecebidos" value="R" class="infraCheckbox" <?= ($strSinDocumentosRecebidos == 'R' ? 'checked="checked"' : '') ?> tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
 							Documentos Externos
                         </label>
                     </div>
@@ -488,7 +485,6 @@ PaginaSEIExterna::getInstance()->abrirBody($strTitulo);
         <input type="hidden" id="txtSiglaUsuario2" name="txtSiglaUsuario2" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strSiglaUsuario2); ?>" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
         <input type="hidden" id="txtSiglaUsuario3" name="txtSiglaUsuario3" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strSiglaUsuario3); ?>" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
         <input type="hidden" id="txtSiglaUsuario4" name="txtSiglaUsuario4" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strSiglaUsuario4); ?>" tabindex="<?= PaginaSEIExterna::getInstance()->getProxTabDados() ?>"/>
-        <input type="hidden" id="hdnSiglasUsuarios" name="hdnSiglasUsuarios" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strUsuarios) ?>"/>
         <input type="hidden" id="hdnSiglasUsuarios" name="hdnSiglasUsuarios" class="infraText" value="<?= PaginaSEIExterna::tratarHTML($strUsuarios) ?>"/>
         <? if ($bolCaptcha) { ?>
             <input type="hidden" id="hdnCId" name="hdnCId" class="infraText" value="<?= $identificadorFormatado; ?>"/>

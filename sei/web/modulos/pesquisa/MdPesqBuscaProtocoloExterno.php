@@ -39,12 +39,7 @@ class MdPesqBuscaProtocoloExterno{
         $objParametroPesquisaDTO->retStrValor();
         $arrParametroPesquisaDTO = InfraArray::converterArrInfraDTO((new MdPesqParametroPesquisaRN())->listar($objParametroPesquisaDTO), 'Valor', 'Nome');
 
-        $bolPesquisaDocumentoProcessoRestrito   = true; // Todo: Forcando para inutilizar o parametro. Remover
-        $bolListaDocumentoProcessoRestrito      = true; // Todo: Forcando para inutilizar o parametro. Remover
-        $bolListaDocumentoProcessoPublico       = true; // Todo: Forcando para inutilizar o parametro. Remover
-        $bolLinkMetadadosProcessoRestrito       = true; // Todo: Forcando para inutilizar o parametro. Remover
         $bolAutocompletarInterressado           = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_AUTO_COMPLETAR_INTERESSADO] == 'S' ? true : false;
-        $txtDescricaoProcedimentoAcessoRestrito = $arrParametroPesquisaDTO[MdPesqParametroPesquisaRN::$TA_DESCRICAO_PROCEDIMENTO_ACESSO_RESTRITO];
 
         $dtaParamCortePesquisa = (new MdPesqParametroPesquisaRN())->existeDataCortePesquisa();
 
@@ -253,9 +248,6 @@ class MdPesqBuscaProtocoloExterno{
 
                         if(!empty($objProcessoDTO)){
                             $isPublico = $objProcessoDTO->getStrStaNivelAcessoLocal() == 0;
-                            if(!$bolPesquisaDocumentoProcessoRestrito && $objProcessoDTO->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO){
-                                $isPublico = false;
-                            }
                         }
                     }
 
@@ -323,9 +315,7 @@ class MdPesqBuscaProtocoloExterno{
                 $isDocumento    = $objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO;
                 if(
                     ( $isProcesso && $objProtocoloDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_SIGILOSO ) ||
-                    ( $isDocumento && !$isPublico && !is_null($pesquisaLivre) && ($pesquisaLivre != InfraSolrUtil::obterTag($registros[$i], 'prot_doc', 'str') || $pesquisaLivre == '\*') ) ||
-                    ( !$bolListaDocumentoProcessoPublico && ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() == ProtocoloRN::$NA_PUBLICO) ) ||
-                    ( !$bolListaDocumentoProcessoRestrito && ( ($isDocumento && !$isPublico) || ($isDocumento && $isPublico && !empty($objProcessoDTO) && $objProcessoDTO->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) ) )
+                    ( $isDocumento && !$isPublico && !is_null($pesquisaLivre) && ($pesquisaLivre != InfraSolrUtil::obterTag($registros[$i], 'prot_doc', 'str') || $pesquisaLivre == '\*') )
                 ){
                     $removidos++;
                     continue;
@@ -424,7 +414,7 @@ class MdPesqBuscaProtocoloExterno{
                 }
             }
 
-            $parametrosCriptografadosProcesso = MdPesqCriptografia::criptografa('acao_externa=md_pesq_processo_exibir&id_orgao_acesso_externo='.$id_orgao_acesso_externo.'&id_procedimento=' . $idProcedimento);
+            $parametrosCriptografadosProcesso = MdPesqCriptografia::criptografaParametros('acao_externa=md_pesq_processo_exibir&id_orgao_acesso_externo='.$id_orgao_acesso_externo.'&id_procedimento=' . $idProcedimento);
             $urlPesquisaProcesso = 'md_pesq_processo_exibir.php?' . $parametrosCriptografadosProcesso;
             $arvore = $urlPesquisaProcesso;
             $tituloLinkNumeroProcesso = "<a href=\"" . PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink(MdPesqSolrUtilExterno::prepararUrl($arvore))) . "\" title=\"Acessar\" target=\"_blank\" class=\"protocoloNormal processoVisitado\" onClick=\"infraLimparFormatarTrAcessada(this.parentNode.parentNode);\">";
@@ -460,7 +450,7 @@ class MdPesqBuscaProtocoloExterno{
                 }
                 $titulo .= " ";
                 if($isPublico){
-                    $parametrosCriptografadosDocumentos = MdPesqCriptografia::criptografa('acao_externa=md_pesq_documento_exibir&id_orgao_acesso_externo='.$id_orgao_acesso_externo.'&id_documento=' . $objDocumentoDTO->getDblIdDocumento());
+                    $parametrosCriptografadosDocumentos = MdPesqCriptografia::criptografaParametros('acao_externa=md_pesq_documento_exibir&id_orgao_acesso_externo='.$id_orgao_acesso_externo.'&id_documento=' . $objDocumentoDTO->getDblIdDocumento());
                     $endereco = 'md_pesq_documento_consulta_externa.php?' . $parametrosCriptografadosDocumentos;
                     $titulo .= "(<a title=\"Acessar\" target=\"_blank\" href=\"" . PaginaSEI::getInstance()->formatarXHTML(SessaoSEI::getInstance()->assinarLink($endereco)) . "\" onClick=\"infraLimparFormatarTrAcessada(this.parentNode.parentNode);\"";
                     $titulo .= " class=\"protocoloNormal\" style=\"padding:0px\">" . trim($dados["identificacao_protocolo"]) ."</a>)";
@@ -478,34 +468,6 @@ class MdPesqBuscaProtocoloExterno{
             $tituloCompleto .= $titulo;
             // REMOVE TAGS DO TÍTULO
             $tituloCompleto = preg_replace("/&lt;.*?&gt;/", "", $tituloCompleto);
-            if ($objProtocoloDTO) {
-                if(!$isPublico && !$bolLinkMetadadosProcessoRestrito) {
-
-                    $titulo = $strNomeTipoProcedimento . " nº " . $dados["protocolo_processo_formatado"];
-                    if($objProtocoloDTO->getStrStaProtocolo() != ProtocoloRN::$TP_PROCEDIMENTO){
-                        $titulo .= " (".trim($dados["identificacao_protocolo"]).")";
-                    }
-                    $strProtocoloDocumento = $dados["protocolo_documento_formatado"];
-                    $tituloCompleto = "<img border=\"0\" src=\"../../svg/arvore.svg\" title=\"Acessar\" class=\"arvore\" />";
-                    $tituloCompleto .= $titulo;
-
-                    $objHipoteseLegalDTO = new HipoteseLegalDTO();
-                    $objHipoteseLegalDTO->retTodos(false);
-                    $objHipoteseLegalDTO->setNumIdHipoteseLegal($objProtocoloDTO->getNumIdHipoteseLegal());
-                    $objHipoteseLegalDTO = (new HipoteseLegalRN())->consultar($objHipoteseLegalDTO);
-
-                    if ($objHipoteseLegalDTO != null) {
-                        $snippet = '<b>Hipótese Legal de Restrição de Acesso: ' . $objHipoteseLegalDTO->getStrNome() . ' (' . $objHipoteseLegalDTO->getStrBaseLegal() . ')</b>';
-                        if (!empty($txtDescricaoProcedimentoAcessoRestrito)) {
-                            $snippet .= '<br/>' . $txtDescricaoProcedimentoAcessoRestrito;
-                        }
-                    } else {
-                        $snippet = !empty($txtDescricaoProcedimentoAcessoRestrito) ? $txtDescricaoProcedimentoAcessoRestrito : 'Processo de Acesso Restrito';
-                    }
-
-                }
-
-            }
 
             if ($objProtocoloDTO) {
 
@@ -518,7 +480,7 @@ class MdPesqBuscaProtocoloExterno{
                 $html .= "</td>\n";
                 $html .= "</tr>\n";
 
-                if ((!empty($snippet) && $isPublico) || (!$isPublico && !$bolLinkMetadadosProcessoRestrito)){
+                if (!empty($snippet) && $isPublico){
                     $html .= "<tr>\n";
                     $html .= "<td width=\"99%\" colspan=\"3\" class=\"resSnippet\">\n";
                     $html .= $snippet;
