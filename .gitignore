@@ -1,0 +1,29 @@
+# Dependências
+/vendor/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# IDE e editores
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+nbproject/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Cache
+*.cache
+
