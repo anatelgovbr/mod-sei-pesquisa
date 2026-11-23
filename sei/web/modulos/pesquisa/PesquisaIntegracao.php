@@ -1,4 +1,4 @@
-<?
+<?php
 
 class PesquisaIntegracao extends SeiIntegracao {
 	
@@ -9,7 +9,7 @@ class PesquisaIntegracao extends SeiIntegracao {
 	
 	public function getVersao()
 	{
-		return '4.3.5';
+		return '4.3.6';
 	}
 	
 	
@@ -216,11 +216,10 @@ class PesquisaIntegracao extends SeiIntegracao {
 				
 				$objProtocoloDTO = new ProtocoloDTO();
 				$objProtocoloDTO->setDblIdProtocolo($processoAnexador->getDblIdProtocolo1());
-				$objProtocoloDTO->retStrStaNivelAcessoGlobal();
 				$objProtocoloDTO->retStrStaNivelAcessoLocal();
 				$objProcessoAnexador = (new ProtocoloRN())->consultarRN0186($objProtocoloDTO);
 
-				if(!empty($objProcessoAnexador) && in_array($objProcessoAnexador->getStrStaNivelAcessoGlobal(), [ProtocoloRN::$NA_RESTRITO])){
+				if(!empty($objProcessoAnexador) && in_array($objProcessoAnexador->getStrStaNivelAcessoLocal(), [ProtocoloRN::$NA_RESTRITO])){
 					$anexoDeRestrito = true;
 				}
 
@@ -500,10 +499,10 @@ class PesquisaIntegracao extends SeiIntegracao {
 			foreach ($listaProcessosAnexadores as $processoAnexador) {
 				$objProtAnexadorDTO = new ProtocoloDTO();
 				$objProtAnexadorDTO->setDblIdProtocolo($processoAnexador->getDblIdProtocolo1());
-				$objProtAnexadorDTO->retStrStaNivelAcessoGlobal();
+				$objProtAnexadorDTO->retStrStaNivelAcessoLocal();
 				$objProcessoAnexador = (new ProtocoloRN())->consultarRN0186($objProtAnexadorDTO);
 
-				if (!empty($objProcessoAnexador) && $objProcessoAnexador->getStrStaNivelAcessoGlobal() != ProtocoloRN::$NA_PUBLICO) {
+				if (!empty($objProcessoAnexador) && $objProcessoAnexador->getStrStaNivelAcessoLocal() != ProtocoloRN::$NA_PUBLICO) {
 					return false;
 				}
 			}
