@@ -297,11 +297,10 @@ class MdPesqBuscaProtocoloExterno{
                     
                     $objProtocoloAnexadoDTO = new ProtocoloDTO();
                     $objProtocoloAnexadoDTO->setDblIdProtocolo($processoAnexador->getDblIdProtocolo1());
-                    $objProtocoloAnexadoDTO->retStrStaNivelAcessoGlobal();
                     $objProtocoloAnexadoDTO->retStrStaNivelAcessoLocal();
                     $objProcessoAnexador = (new ProtocoloRN())->consultarRN0186($objProtocoloAnexadoDTO);
 
-                    if(!empty($objProcessoAnexador) && !in_array($objProcessoAnexador->getStrStaNivelAcessoGlobal(), [ProtocoloRN::$NA_PUBLICO])){
+                    if(!empty($objProcessoAnexador) && !in_array($objProcessoAnexador->getStrStaNivelAcessoLocal(), [ProtocoloRN::$NA_PUBLICO])){
                         $isPublico = false;
                     }
 
